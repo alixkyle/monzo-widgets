@@ -15,6 +15,10 @@ const DEFAULTS = {
   hideZeroPots: true,
   showCurrentAccount: true,
   showFlex: true,
+  splitRepayments: "original",
+  unlinkedIncoming: "ignore",
+  cardRefunds: "original",
+  outgoingTransfers: "include",
 };
 
 const fm = FileManager.iCloud();
@@ -36,6 +40,11 @@ function saveSettings(settings) {
 
 function state(value) {
   return value ? "On" : "Off";
+}
+
+function cycle(current, values) {
+  const index = values.indexOf(current);
+  return values[(index + 1) % values.length];
 }
 
 async function configureConnection(settings) {
@@ -115,6 +124,60 @@ while (true) {
     {
       label: `Show Flex row: ${state(settings.showFlex)}`,
       run: () => (settings.showFlex = !settings.showFlex),
+    },
+    {
+      label: `Bill-split repayments: ${
+        settings.splitRepayments === "original"
+          ? "Reduce original purchase"
+          : "Ignore"
+      }`,
+      run: () =>
+        (settings.splitRepayments = cycle(settings.splitRepayments, [
+          "original",
+          "ignore",
+        ])),
+    },
+    {
+      label: `Other incoming payments: ${
+        settings.unlinkedIncoming === "ignore"
+          ? "Ignore"
+          : "Reduce received day"
+      }`,
+      run: () =>
+        (settings.unlinkedIncoming = cycle(settings.unlinkedIncoming, [
+          "ignore",
+          "received",
+        ])),
+    },
+    {
+      label: `Card refunds: ${
+        {
+          original: "Original purchase",
+          received: "Refund day",
+          ignore: "Ignore",
+        }[settings.cardRefunds]
+      }`,
+      run: () =>
+        (settings.cardRefunds = cycle(settings.cardRefunds, [
+          "original",
+          "received",
+          "ignore",
+        ])),
+    },
+    {
+      label: `Outgoing transfers: ${
+        {
+          include: "Include",
+          exclude: "Exclude",
+          spending: "Spending categories only",
+        }[settings.outgoingTransfers]
+      }`,
+      run: () =>
+        (settings.outgoingTransfers = cycle(settings.outgoingTransfers, [
+          "include",
+          "exclude",
+          "spending",
+        ])),
     },
   ];
 

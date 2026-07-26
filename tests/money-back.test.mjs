@@ -61,3 +61,49 @@ test("a repayment cannot reduce a purchase below zero", () => {
 
   assert.deepEqual(buckets[0].daily, [0, 0]);
 });
+
+test("linked bill-split repayments can be ignored", () => {
+  const debit = purchase("purchase-1");
+  const buckets = [{ debits: [debit], daily: [-2000, 0] }];
+
+  applyMoneyBack(
+    [repayment("repayment-1", debit.id)],
+    buckets,
+    dayStarts,
+    { splitRepayments: "ignore" }
+  );
+
+  assert.deepEqual(buckets[0].daily, [-2000, 0]);
+});
+
+test("unlinked incoming payments can reduce the received day", () => {
+  const debit = purchase("purchase-1");
+  const buckets = [{ debits: [debit], daily: [-2000, 0] }];
+
+  applyMoneyBack(
+    [repayment("repayment-1")],
+    buckets,
+    dayStarts,
+    { unlinkedIncoming: "received" }
+  );
+
+  assert.deepEqual(buckets[0].daily, [-1000, 0]);
+});
+
+test("card refunds can be ignored or applied on the refund day", () => {
+  const debit = purchase("purchase-1");
+  const refund = {
+    ...purchase("refund-1", 1000),
+    created: "2026-07-26T10:00:00.000Z",
+  };
+  const ignored = [{ debits: [debit], daily: [-2000, -500] }];
+  const received = [{ debits: [debit], daily: [-2000, -500] }];
+
+  applyMoneyBack([refund], ignored, dayStarts, { cardRefunds: "ignore" });
+  applyMoneyBack([refund], received, dayStarts, {
+    cardRefunds: "received",
+  });
+
+  assert.deepEqual(ignored[0].daily, [-2000, -500]);
+  assert.deepEqual(received[0].daily, [-2000, 0]);
+});

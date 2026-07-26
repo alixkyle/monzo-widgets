@@ -5,6 +5,18 @@ export type SpendBucket = {
   daily: number[];
 };
 
+export type MoneyBackOptions = {
+  splitRepayments: "original" | "ignore";
+  unlinkedIncoming: "ignore" | "received";
+  cardRefunds: "original" | "received" | "ignore";
+};
+
+const DEFAULT_OPTIONS: MoneyBackOptions = {
+  splitRepayments: "original",
+  unlinkedIncoming: "ignore",
+  cardRefunds: "original",
+};
+
 export function isCardPayment(t: Transaction): boolean {
   return t.scheme === "mastercard";
 }
@@ -47,8 +59,11 @@ function creditDay(
 export function applyMoneyBack(
   credits: Transaction[],
   buckets: SpendBucket[],
-  dayStarts: Date[]
+  dayStarts: Date[],
+  requestedOptions: Partial<MoneyBackOptions> = {}
 ): void {
+  const options = { ...DEFAULT_OPTIONS, ...requestedOptions };
+
   for (const credit of credits) {
     const isP2P =
       credit.scheme === "p2p_payment" ||
@@ -56,6 +71,8 @@ export function applyMoneyBack(
 
     if (isP2P) {
       const originalId = credit.metadata?.original_transaction_id;
+      if (originalId && options.splitRepayments === "ignore") continue;
+
       const original = originalId
         ? buckets
             .flatMap((bucket) =>
@@ -74,7 +91,27 @@ export function applyMoneyBack(
         }
       }
 
-      // Never guess for an unlinked payment from another person.
+      if (!originalId && options.unlinkedIncoming === "received") {
+        const i = dayIndex(credit.created, dayStarts);
+        if (i >= 0) creditDay(buckets, i, credit.amount);
+      }
+
+      // Never guess for an unlinked payment unless explicitly requested.
+      continue;
+    }
+
+    if (!isCardPayment(credit)) {
+      if (options.unlinkedIncoming === "received") {
+        const i = dayIndex(credit.created, dayStarts);
+        if (i >= 0) creditDay(buckets, i, credit.amount);
+      }
+      continue;
+    }
+
+    if (options.cardRefunds === "ignore") continue;
+    if (options.cardRefunds === "received") {
+      const i = dayIndex(credit.created, dayStarts);
+      if (i >= 0) creditDay(buckets, i, credit.amount);
       continue;
     }
 

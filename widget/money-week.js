@@ -36,6 +36,10 @@ async function loadWidgetSettings() {
     excludeSavings: true,
     includeFlexWeek: true,
     dayStart: "midnight",
+    splitRepayments: "original",
+    unlinkedIncoming: "ignore",
+    cardRefunds: "original",
+    outgoingTransfers: "include",
   };
   try {
     const fm = FileManager.iCloud();
@@ -64,6 +68,10 @@ async function fetchWeek() {
     `exclude=${encodeURIComponent(excluded.join(","))}`,
     `includeFlex=${SETTINGS.includeFlexWeek}`,
     `dayStart=${encodeURIComponent(SETTINGS.dayStart)}`,
+    `splitRepayments=${encodeURIComponent(SETTINGS.splitRepayments)}`,
+    `unlinkedIncoming=${encodeURIComponent(SETTINGS.unlinkedIncoming)}`,
+    `cardRefunds=${encodeURIComponent(SETTINGS.cardRefunds)}`,
+    `outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`,
   ].join("&");
   const req = new Request(`${workerUrl}/week?${query}`);
   req.headers = { Authorization: `Bearer ${widgetKey}` };

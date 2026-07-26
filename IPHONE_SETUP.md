@@ -131,6 +131,11 @@ Run `Money Settings` whenever you want to change:
 - Whether Flex debt is subtracted from Total Balance
 - Whether zero-balance pots are hidden
 - Whether Current Account and Flex rows are shown
+- Whether linked bill-split repayments reduce the original purchase
+- Whether unrelated incoming payments are ignored or reduce spending
+- Whether card refunds apply to the purchase date, refund date, or are ignored
+- Whether outgoing transfers are included, excluded, or limited to spending
+  categories
 
 The settings are stored in Scriptable's iCloud folder and apply to every widget.
 

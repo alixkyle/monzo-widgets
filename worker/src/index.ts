@@ -389,6 +389,24 @@ async function handleWeek(
   );
   const includeFlex = url.searchParams.get("includeFlex") !== "false";
   const useMonzoDay = url.searchParams.get("dayStart") === "monzo";
+  const splitRepayments =
+    url.searchParams.get("splitRepayments") === "ignore"
+      ? "ignore"
+      : "original";
+  const unlinkedIncoming =
+    url.searchParams.get("unlinkedIncoming") === "received"
+      ? "received"
+      : "ignore";
+  const cardRefundParam = url.searchParams.get("cardRefunds");
+  const cardRefunds =
+    cardRefundParam === "received" || cardRefundParam === "ignore"
+      ? cardRefundParam
+      : "original";
+  const outgoingTransferParam = url.searchParams.get("outgoingTransfers");
+  const outgoingTransfers =
+    outgoingTransferParam === "exclude" || outgoingTransferParam === "spending"
+      ? outgoingTransferParam
+      : "include";
 
   // `weeks=1` is the week before last, and so on, so several widgets can sit
   // in a stack and be swiped between.
@@ -439,7 +457,23 @@ async function handleWeek(
       : flexTx.filter((t) => !hasAnyWeekCategory(t, excludedCategories));
 
   const cardSpend = spendOnly(retailReal).filter(isCardPayment);
-  const transferSpend = spendOnly(retailReal).filter((t) => !isCardPayment(t));
+  const allTransferSpend = spendOnly(retailReal).filter(
+    (t) => !isCardPayment(t)
+  );
+  const nonSpendingTransferCategories = new Set([
+    "income",
+    "transfers",
+    "savings",
+  ]);
+  const transferSpend = categoryFilter.size
+    ? allTransferSpend
+    : outgoingTransfers === "exclude"
+      ? []
+      : outgoingTransfers === "spending"
+        ? allTransferSpend.filter(
+            (t) => !hasAnyWeekCategory(t, nonSpendingTransferCategories)
+          )
+        : allTransferSpend;
   const flexSpend = spendOnly(flexReal);
 
   const cardDaily = bucketByDay(cardSpend, dayStarts);
@@ -462,14 +496,22 @@ async function handleWeek(
   // Refunds and friends' repayments belong to the day of the original
   // purchase, not the day the money arrived — otherwise paying you back on
   // Friday makes Friday look cheap and leaves Tuesday overstated.
+  const incomingForAdjustment = [...retailReal, ...flexReal].filter(
+    (t) =>
+      isMoneyBack(t) ||
+      (unlinkedIncoming === "received" &&
+        t.amount > 0 &&
+        retailReal.some((retailTransaction) => retailTransaction.id === t.id))
+  );
   applyMoneyBack(
-    [...retailReal, ...flexReal].filter(isMoneyBack),
+    incomingForAdjustment,
     [
       { debits: cardSpend, daily: cardDaily },
       { debits: flexSpend, daily: flexDaily },
       { debits: transferSpend, daily: transferDaily },
     ],
-    dayStarts
+    dayStarts,
+    { splitRepayments, unlinkedIncoming, cardRefunds }
   );
 
   const days = dayStarts.map((start, i) => {
