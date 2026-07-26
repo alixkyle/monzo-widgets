@@ -137,7 +137,10 @@ Run `Money Settings` whenever you want to change:
 - Whether outgoing transfers are included, excluded, or limited to spending
   categories
 
-The settings are stored in Scriptable's iCloud folder and apply to every widget.
+The settings screen groups these into **Money App & Money Week**,
+**Balances & Pots**, and **Advanced transaction handling** so the first screen
+stays short. Settings are stored in Scriptable's iCloud folder and apply to
+every widget.
 Money App and Money Week use the same calculation rules, so today's headline
 matches today's bar in the weekly chart.
 

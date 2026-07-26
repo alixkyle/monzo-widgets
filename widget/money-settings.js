@@ -70,134 +70,200 @@ if (!settings.workerUrl || !settings.widgetKey) {
   if (await configureConnection(settings)) saveSettings(settings);
 }
 
+async function presentOptions(title, message, actions) {
+  while (true) {
+    const alert = new Alert();
+    alert.title = title;
+    alert.message = message;
+    for (const action of actions) alert.addAction(action.label());
+    alert.addCancelAction("Back");
+
+    const choice = await alert.presentSheet();
+    if (choice < 0) return;
+
+    await actions[choice].run();
+    saveSettings(settings);
+  }
+}
+
+async function spendingSettings() {
+  await presentOptions(
+    "Spending widgets",
+    "These settings keep Money App and Money Week aligned. Bills and Savings also affect the separate chart.",
+    [
+      {
+        label: () =>
+          `Bills in Money Week: ${
+            settings.excludeBills ? "Excluded" : "Included"
+          }`,
+        run: () => (settings.excludeBills = !settings.excludeBills),
+      },
+      {
+        label: () =>
+          `Savings in Money Week: ${
+            settings.excludeSavings ? "Excluded" : "Included"
+          }`,
+        run: () => (settings.excludeSavings = !settings.excludeSavings),
+      },
+      {
+        label: () =>
+          `Flex spending: ${
+            settings.includeFlexWeek ? "Included" : "Excluded"
+          }`,
+        run: () => (settings.includeFlexWeek = !settings.includeFlexWeek),
+      },
+      {
+        label: () =>
+          `Day starts: ${
+            settings.dayStart === "midnight" ? "UK midnight" : "Monzo 04:00"
+          }`,
+        run: () =>
+          (settings.dayStart =
+            settings.dayStart === "midnight" ? "monzo" : "midnight"),
+      },
+    ]
+  );
+}
+
+async function balanceSettings() {
+  await presentOptions(
+    "Balances & pots",
+    "Controls the balance rows and the small Pots widget.",
+    [
+      {
+        label: () =>
+          `Subtract Flex from total: ${state(
+            settings.subtractFlexFromTotal
+          )}`,
+        run: () =>
+          (settings.subtractFlexFromTotal = !settings.subtractFlexFromTotal),
+      },
+      {
+        label: () => `Hide £0 pots: ${state(settings.hideZeroPots)}`,
+        run: () => (settings.hideZeroPots = !settings.hideZeroPots),
+      },
+      {
+        label: () =>
+          `Show Current Account: ${state(settings.showCurrentAccount)}`,
+        run: () => (settings.showCurrentAccount = !settings.showCurrentAccount),
+      },
+      {
+        label: () => `Show Flex: ${state(settings.showFlex)}`,
+        run: () => (settings.showFlex = !settings.showFlex),
+      },
+    ]
+  );
+}
+
+async function transactionSettings() {
+  await presentOptions(
+    "Transaction handling",
+    "Advanced rules used by Money App and Money Week.",
+    [
+      {
+        label: () =>
+          `Bill splits: ${
+            settings.splitRepayments === "original"
+              ? "Reduce original purchase"
+              : "Ignore"
+          }`,
+        run: () =>
+          (settings.splitRepayments = cycle(settings.splitRepayments, [
+            "original",
+            "ignore",
+          ])),
+      },
+      {
+        label: () =>
+          `Other incoming money: ${
+            settings.unlinkedIncoming === "ignore"
+              ? "Ignore"
+              : "Reduce received day"
+          }`,
+        run: () =>
+          (settings.unlinkedIncoming = cycle(settings.unlinkedIncoming, [
+            "ignore",
+            "received",
+          ])),
+      },
+      {
+        label: () =>
+          `Card refunds: ${
+            {
+              original: "Original purchase",
+              received: "Refund day",
+              ignore: "Ignore",
+            }[settings.cardRefunds]
+          }`,
+        run: () =>
+          (settings.cardRefunds = cycle(settings.cardRefunds, [
+            "original",
+            "received",
+            "ignore",
+          ])),
+      },
+      {
+        label: () =>
+          `Outgoing transfers: ${
+            {
+              include: "Include",
+              exclude: "Exclude",
+              spending: "Spending categories only",
+            }[settings.outgoingTransfers]
+          }`,
+        run: () =>
+          (settings.outgoingTransfers = cycle(settings.outgoingTransfers, [
+            "include",
+            "exclude",
+            "spending",
+          ])),
+      },
+    ]
+  );
+}
+
+async function resetSettings() {
+  const alert = new Alert();
+  alert.title = "Reset all preferences?";
+  alert.message =
+    "Your Worker connection will be kept. All widget choices will return to their recommended defaults.";
+  alert.addDestructiveAction("Reset preferences");
+  alert.addCancelAction("Cancel");
+  if ((await alert.presentAlert()) < 0) return;
+
+  settings = {
+    ...DEFAULTS,
+    workerUrl: settings.workerUrl,
+    widgetKey: settings.widgetKey,
+  };
+  saveSettings(settings);
+}
+
 while (true) {
   const alert = new Alert();
   alert.title = "Money Settings";
-  alert.message = "Changes apply to every Money App widget.";
-
-  const actions = [
-    {
-      label: "Update Worker connection",
-      run: () => configureConnection(settings),
-    },
-    {
-      label: `Exclude Bills from Money Week: ${state(settings.excludeBills)}`,
-      run: () => (settings.excludeBills = !settings.excludeBills),
-    },
-    {
-      label: `Exclude Savings from Money Week: ${state(
-        settings.excludeSavings
-      )}`,
-      run: () => (settings.excludeSavings = !settings.excludeSavings),
-    },
-    {
-      label: `Include Flex in weekly charts: ${state(
-        settings.includeFlexWeek
-      )}`,
-      run: () => (settings.includeFlexWeek = !settings.includeFlexWeek),
-    },
-    {
-      label: `Day starts: ${
-        settings.dayStart === "midnight" ? "Midnight" : "Monzo 04:00"
-      }`,
-      run: () =>
-        (settings.dayStart =
-          settings.dayStart === "midnight" ? "monzo" : "midnight"),
-    },
-    {
-      label: `Subtract Flex from Total Balance: ${state(
-        settings.subtractFlexFromTotal
-      )}`,
-      run: () =>
-        (settings.subtractFlexFromTotal = !settings.subtractFlexFromTotal),
-    },
-    {
-      label: `Hide £0 pots: ${state(settings.hideZeroPots)}`,
-      run: () => (settings.hideZeroPots = !settings.hideZeroPots),
-    },
-    {
-      label: `Show Current Account row: ${state(
-        settings.showCurrentAccount
-      )}`,
-      run: () => (settings.showCurrentAccount = !settings.showCurrentAccount),
-    },
-    {
-      label: `Show Flex row: ${state(settings.showFlex)}`,
-      run: () => (settings.showFlex = !settings.showFlex),
-    },
-    {
-      label: `Bill-split repayments: ${
-        settings.splitRepayments === "original"
-          ? "Reduce original purchase"
-          : "Ignore"
-      }`,
-      run: () =>
-        (settings.splitRepayments = cycle(settings.splitRepayments, [
-          "original",
-          "ignore",
-        ])),
-    },
-    {
-      label: `Other incoming payments: ${
-        settings.unlinkedIncoming === "ignore"
-          ? "Ignore"
-          : "Reduce received day"
-      }`,
-      run: () =>
-        (settings.unlinkedIncoming = cycle(settings.unlinkedIncoming, [
-          "ignore",
-          "received",
-        ])),
-    },
-    {
-      label: `Card refunds: ${
-        {
-          original: "Original purchase",
-          received: "Refund day",
-          ignore: "Ignore",
-        }[settings.cardRefunds]
-      }`,
-      run: () =>
-        (settings.cardRefunds = cycle(settings.cardRefunds, [
-          "original",
-          "received",
-          "ignore",
-        ])),
-    },
-    {
-      label: `Outgoing transfers: ${
-        {
-          include: "Include",
-          exclude: "Exclude",
-          spending: "Spending categories only",
-        }[settings.outgoingTransfers]
-      }`,
-      run: () =>
-        (settings.outgoingTransfers = cycle(settings.outgoingTransfers, [
-          "include",
-          "exclude",
-          "spending",
-        ])),
-    },
-  ];
-
-  for (const action of actions) alert.addAction(action.label);
-  alert.addDestructiveAction("Reset defaults");
+  alert.message = "Choose the part of your widgets you want to change.";
+  alert.addAction("Connection");
+  alert.addAction("Money App & Money Week");
+  alert.addAction("Balances & Pots");
+  alert.addAction("Advanced transaction handling");
+  alert.addDestructiveAction("Reset preferences");
   alert.addCancelAction("Done");
 
   const choice = await alert.presentSheet();
   if (choice < 0) break;
 
-  if (choice === actions.length) {
-    settings = {
-      ...DEFAULTS,
-      workerUrl: settings.workerUrl,
-      widgetKey: settings.widgetKey,
-    };
-  } else {
-    await actions[choice].run();
+  if (choice === 0) {
+    if (await configureConnection(settings)) saveSettings(settings);
+  } else if (choice === 1) {
+    await spendingSettings();
+  } else if (choice === 2) {
+    await balanceSettings();
+  } else if (choice === 3) {
+    await transactionSettings();
+  } else if (choice === 4) {
+    await resetSettings();
   }
-  saveSettings(settings);
 }
 
 Script.complete();
