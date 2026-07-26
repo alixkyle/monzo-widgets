@@ -9,7 +9,8 @@ you control.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/alixkyle/monzo-widgets/tree/main/worker)
 
-**iPhone only: [follow the mobile setup](IPHONE_SETUP.md).**
+**iPhone only: [follow the step-by-step mobile setup](IPHONE_SETUP.md).** It
+explains the temporary Monzo callback address and requires no coding.
 
 For terminal-based setup, see [SETUP.md](SETUP.md).
 

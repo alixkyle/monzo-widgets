@@ -1,6 +1,7 @@
 # Set up Monzo Widgets using only an iPhone
 
-No Mac or terminal is required. Allow around 15–20 minutes the first time.
+No Mac, coding, or terminal is required. Allow around 15–20 minutes the first
+time and follow the steps in order.
 
 You will need:
 
@@ -12,14 +13,35 @@ You will need:
 Each person should deploy their own private Worker. Never share Monzo client
 secrets, widget keys, or a configured Scriptable settings file.
 
-## 1. Create a Monzo developer client
+> **Why is GitHub needed?** Only because Cloudflare's one-tap deployment makes
+> your own copy of the code through your GitHub account. You do not need to
+> understand GitHub, upload anything, or give your friend access to this
+> repository. Scriptable does not require a GitHub account.
+
+## The whole setup
+
+You will:
+
+1. Make a Monzo client using a temporary callback address.
+2. Tap the Cloudflare deploy button and paste in three values.
+3. Replace the temporary address with the real address Cloudflare gives you.
+4. Connect Monzo.
+5. Run one installer in Scriptable.
+
+## 1. Create the Monzo client
 
 1. Open [developers.monzo.com](https://developers.monzo.com/) in Safari and
    sign in with Monzo.
 2. Create a new OAuth client.
 3. Name it `Monzo Widgets`.
 4. Make the client **Confidential**.
-5. Use `https://example.com/auth/callback` as the redirect URL temporarily.
+5. For **Redirect URL**, paste:
+
+   `https://example.com/auth/callback`
+
+   This is deliberately temporary. Do not open it and do not connect Monzo
+   with it. You will replace it with your real Cloudflare address in step 3.
+
 6. Save the Client ID and Client Secret somewhere private. You will enter them
    into Cloudflare in the next step.
 
@@ -29,31 +51,42 @@ Tap the button:
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/alixkyle/monzo-widgets/tree/main/worker)
 
-1. Sign in to GitHub and Cloudflare when prompted.
-2. Accept the default repository and Worker names, or choose your own.
-3. Enter the three requested secret values:
+1. Sign in to GitHub and Cloudflare when prompted. Creating both accounts is
+   free.
+2. Allow Cloudflare to make its own copy of `monzo-widgets`.
+3. Accept the suggested repository and Worker names.
+4. Enter the three requested secret values:
 
    - `MONZO_CLIENT_ID`: the Client ID from Monzo
    - `MONZO_CLIENT_SECRET`: the Client Secret from Monzo
-   - `WIDGET_KEY`: a new long private password you choose
+   - `WIDGET_KEY`: a new private password you choose (use at least 20
+     characters)
 
-4. Save the widget key in the Passwords app—you will need the exact same value
+5. Save the widget key in the Passwords app—you will need the exact same value
    when installing the widgets.
-5. Finish the deployment. Cloudflare creates and connects the private token
+6. Finish the deployment. Cloudflare creates and connects the private token
    storage automatically.
 
 ## 3. Connect Monzo
 
 1. Open the new `workers.dev` URL shown by Cloudflare.
-2. Copy the **Monzo Redirect URL** displayed on the page.
+2. On the page headed **Monzo Widgets**, copy the full **Monzo Redirect URL**.
+   It will look similar to:
+
+   `https://monzo-widgets.example.workers.dev/auth/callback`
+
 3. Return to your client at [developers.monzo.com](https://developers.monzo.com/)
-   and replace the temporary redirect URL with the copied one.
-4. Return to your Worker page.
-5. Enter the widget key you chose and tap **Connect Monzo**.
-6. Follow the magic link Monzo emails you.
-7. Open the Monzo app and approve the access request.
+   and replace `https://example.com/auth/callback` with the copied address.
+4. Save the Monzo client and check the address ends in `/auth/callback`.
+5. Return to the **Monzo Widgets** Worker page.
+6. Enter the widget key you saved and tap **Connect Monzo**.
+7. Follow the magic link Monzo emails you.
+8. Open the Monzo app and approve the access request.
 
 The connection page should now confirm that the account is connected.
+
+> Do not continue if the temporary `example.com` address is still in Monzo.
+> Replace it first; otherwise Monzo cannot return you to your private Worker.
 
 ## 4. Install every widget
 
@@ -65,10 +98,14 @@ The connection page should now confirm that the account is connected.
    in Safari.
 3. Use Safari's Share button and choose **Save to Files**.
 4. Save it in **iCloud Drive → Scriptable** as `Money Installer.js`.
-5. Open Scriptable and run **Money Installer**.
-6. Enter the Worker URL and widget key. The installer verifies the connection,
+5. Open Scriptable. Tap **Money Installer**, then tap the triangular Run button.
+6. Enter the Worker URL without `/auth/callback` on the end. For example:
+
+   `https://monzo-widgets.example.workers.dev`
+
+7. Enter the same widget key you saved earlier. The installer verifies the connection,
    downloads every widget, and writes their shared settings.
-7. Run **Money Settings** to review the defaults.
+8. Run **Money Settings** to review the defaults.
 
 ## 5. Add the Home Screen widgets
 
@@ -109,6 +146,10 @@ private storage used for rotating Monzo tokens.
 
 **Monzo says the redirect URL is wrong** — copy it again from the Worker home
 page. It must end in `/auth/callback` and match exactly.
+
+**Do I keep the example.com redirect?** — no. It only lets you create the Monzo
+client before Cloudflare has generated your real address. Replace it during
+step 3, before tapping Connect Monzo.
 
 **The Worker says Unauthorised** — the widget key entered on the Worker page or
 in Money Installer does not exactly match the `WIDGET_KEY` Cloudflare secret.
