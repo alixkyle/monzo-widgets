@@ -117,6 +117,12 @@ export interface Transaction {
   category?: string;
   /** Newer split-category form: category name -> amount in minor units. */
   categories?: Record<string, number>;
+  /** Monzo links bill-split repayments to the purchase through this metadata. */
+  metadata?: {
+    original_transaction_id?: string;
+    tab_id?: string;
+    [key: string]: string | undefined;
+  };
   counterparty?: { name?: string; user_id?: string } | null;
   merchant?: { name?: string; logo?: string; category?: string } | null;
 }

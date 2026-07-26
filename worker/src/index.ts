@@ -11,6 +11,7 @@ import {
   spendDayLabel,
   Transaction,
 } from "./monzo.js";
+import { applyMoneyBack, isCardPayment } from "./money-back.js";
 
 /**
  * Small proxy between the iPhone widget and Monzo.
@@ -229,10 +230,6 @@ function spendOnly(transactions: Transaction[]): Transaction[] {
  * even though they read like purchases, so the scheme is the reliable signal
  * rather than whether a merchant record exists.
  */
-function isCardPayment(t: Transaction): boolean {
-  return t.scheme === "mastercard";
-}
-
 function transactionCategories(t: Transaction): string[] {
   return [
     t.category,
@@ -256,15 +253,6 @@ function amountForWeekCategory(t: Transaction, category: string): number {
   return primary === category ? t.amount : 0;
 }
 
-/** Which spend-day a timestamp falls in, or -1 if outside the window. */
-function dayIndex(created: string, dayStarts: Date[]): number {
-  const at = Date.parse(created);
-  for (let i = dayStarts.length - 1; i >= 0; i--) {
-    if (at >= dayStarts[i].getTime()) return i;
-  }
-  return -1;
-}
-
 /**
  * Money back that should reduce spending: card refunds, and friends paying
  * back their share. Wages and other income use different schemes (bacs,
@@ -277,85 +265,6 @@ function isMoneyBack(t: Transaction): boolean {
       t.scheme === "p2p_payment" ||
       t.scheme === "monzo_to_monzo")
   );
-}
-
-/**
- * Reduces a day's totals by `amount`, spending it across the buckets that
- * actually have spending on that day so a large reimbursement isn't lost
- * against a single small category.
- */
-function creditDay(
-  buckets: { daily: number[] }[],
-  dayIdx: number,
-  amount: number
-): void {
-  let left = amount;
-  for (const bucket of buckets) {
-    if (left <= 0) return;
-    const spent = -bucket.daily[dayIdx];
-    if (spent <= 0) continue;
-    const used = Math.min(spent, left);
-    bucket.daily[dayIdx] += used;
-    left -= used;
-  }
-}
-
-/**
- * Credits refunds and reimbursements against the day the original purchase
- * happened, falling back to the day the money arrived.
- *
- * Matching is by merchant, preferring an exact amount so a partial refund
- * doesn't attach to the wrong visit. A reimbursement tagged with the original
- * merchant's name can therefore land on the correct day.
- */
-function applyMoneyBack(
-  credits: Transaction[],
-  buckets: { debits: Transaction[]; daily: number[] }[],
-  dayStarts: Date[]
-): void {
-  for (const credit of credits) {
-    const name = credit.merchant?.name;
-
-    const candidates = name
-      ? buckets.flatMap((bucket) =>
-          bucket.debits
-            .filter(
-              (d) =>
-                d.merchant?.name === name &&
-                Date.parse(d.created) <= Date.parse(credit.created)
-            )
-            .map((d) => ({ bucket, debit: d }))
-        )
-      : [];
-
-    if (candidates.length > 0) {
-      const exact = candidates.filter((c) => -c.debit.amount === credit.amount);
-      const pool = exact.length ? exact : candidates;
-      const best = pool.reduce((a, b) =>
-        Date.parse(a.debit.created) >= Date.parse(b.debit.created) ? a : b
-      );
-
-      const i = dayIndex(best.debit.created, dayStarts);
-      if (i >= 0) {
-        // Buckets hold negative totals; money back reduces the magnitude and
-        // never pushes a day into negative spending.
-        best.bucket.daily[i] = Math.min(
-          0,
-          best.bucket.daily[i] + credit.amount
-        );
-        continue;
-      }
-    }
-
-    // Only card refunds fall back to the arrival day. A repayment from a
-    // friend with nothing linking it to a purchase could be for anything —
-    // including something outside this window — so it's left out rather than
-    // quietly discounting an unrelated day.
-    if (!isCardPayment(credit)) continue;
-
-    const i = dayIndex(credit.created, dayStarts);
-    if (i >= 0) creditDay(buckets, i, credit.amount);
-  }
 }
 
 const TRANSFER_WINDOW = 3 * 24 * 60 * 60 * 1000;
@@ -696,6 +605,15 @@ async function handleDiagnose(
         r.amount < 0 &&
         /flex/i.test(`${r.merchant?.name ?? ""} ${r.description ?? ""}`)
     );
+    const incomingP2P = retailTx.filter(
+      (t) =>
+        t.amount > 0 &&
+        (t.scheme === "p2p_payment" || t.scheme === "monzo_to_monzo")
+    );
+    const linkedSplits = incomingP2P.filter(
+      (t) => t.metadata?.original_transaction_id
+    );
+    const retailIds = new Set(retailTx.map((t) => t.id));
 
     overlap = {
       flexPurchases: flexPurchases.length,
@@ -709,6 +627,13 @@ async function handleDiagnose(
       retailToFlexNames: retailToFlex
         .slice(0, 5)
         .map((r) => `${r.created.slice(0, 10)} ${r.amount} ${r.merchant?.name ?? r.description}`),
+      splitRepayments: {
+        incomingP2P: incomingP2P.length,
+        withOriginalTransactionId: linkedSplits.length,
+        originalInWindow: linkedSplits.filter((t) =>
+          retailIds.has(t.metadata!.original_transaction_id!)
+        ).length,
+      },
       excludedAsTransfers:
         retailTx.filter((t) => t.amount < 0 && !t.decline_reason).length -
         spendOnly(withoutInternalTransfers(retailTx, flexTx)).length,
