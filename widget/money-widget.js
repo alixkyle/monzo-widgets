@@ -22,7 +22,18 @@ const COLORS = {
 };
 
 async function loadWidgetSettings() {
-  const defaults = { workerUrl: "", widgetKey: "", dayStart: "midnight" };
+  const defaults = {
+    workerUrl: "",
+    widgetKey: "",
+    excludeBills: true,
+    excludeSavings: true,
+    includeFlexWeek: true,
+    dayStart: "midnight",
+    splitRepayments: "original",
+    unlinkedIncoming: "ignore",
+    cardRefunds: "original",
+    outgoingTransfers: "include",
+  };
   try {
     const fm = FileManager.iCloud();
     const path = fm.joinPath(
@@ -39,16 +50,40 @@ async function loadWidgetSettings() {
 
 const SETTINGS = await loadWidgetSettings();
 
-async function fetchSummary() {
-  const workerUrl = SETTINGS.workerUrl || WORKER_URL;
-  const widgetKey = SETTINGS.widgetKey || WIDGET_KEY;
-  const req = new Request(
-    `${workerUrl}/summary?dayStart=${encodeURIComponent(SETTINGS.dayStart)}`
-  );
+async function loadJSON(url, widgetKey) {
+  const req = new Request(url);
   // Sent as a header rather than in the URL, so the key stays out of logs.
   req.headers = { Authorization: `Bearer ${widgetKey}` };
   req.timeoutInterval = 15;
   return req.loadJSON();
+}
+
+async function fetchMoneyData() {
+  const workerUrl = SETTINGS.workerUrl || WORKER_URL;
+  const widgetKey = SETTINGS.widgetKey || WIDGET_KEY;
+  const excluded = [];
+  if (SETTINGS.excludeBills) excluded.push("bills");
+  if (SETTINGS.excludeSavings) excluded.push("savings");
+  const weekQuery = [
+    "weeks=0",
+    `exclude=${encodeURIComponent(excluded.join(","))}`,
+    `includeFlex=${SETTINGS.includeFlexWeek}`,
+    `dayStart=${encodeURIComponent(SETTINGS.dayStart)}`,
+    `splitRepayments=${encodeURIComponent(SETTINGS.splitRepayments)}`,
+    `unlinkedIncoming=${encodeURIComponent(SETTINGS.unlinkedIncoming)}`,
+    `cardRefunds=${encodeURIComponent(SETTINGS.cardRefunds)}`,
+    `outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`,
+  ].join("&");
+
+  // Use Money Week as the single source of truth for today's spending total.
+  const week = await loadJSON(`${workerUrl}/week?${weekQuery}`, widgetKey);
+  const summary = await loadJSON(
+    `${workerUrl}/summary?dayStart=${encodeURIComponent(SETTINGS.dayStart)}`,
+    widgetKey
+  );
+  const today = week.days?.[week.days.length - 1];
+  if (today) summary.spentToday = today.total;
+  return summary;
 }
 
 /** Monzo returns minor units; spending is negative, so flip it for display. */
@@ -163,7 +198,7 @@ function errorWidget(message) {
 
 let widget;
 try {
-  widget = buildWidget(await fetchSummary());
+  widget = buildWidget(await fetchMoneyData());
 } catch (e) {
   widget = errorWidget(String(e));
 }

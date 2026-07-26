@@ -138,6 +138,8 @@ Run `Money Settings` whenever you want to change:
   categories
 
 The settings are stored in Scriptable's iCloud folder and apply to every widget.
+Money App and Money Week use the same calculation rules, so today's headline
+matches today's bar in the weekly chart.
 
 ## Updating later
 
