@@ -25,7 +25,7 @@ in one always-on place avoids that; the widget just fetches plain JSON.
 
 | Path                      | What it is                                    |
 | ------------------------- | --------------------------------------------- |
-| `worker/src/index.ts`     | HTTP routes: `/auth`, `/auth/callback`, `/summary`, `/week`, `/weeks`, `/pots` |
+| `worker/src/index.ts`     | HTTP routes: `/auth`, `/auth/callback`, `/summary`, `/week`, `/weeks`, `/pots`, `/accounts` |
 | `worker/src/monzo.ts`     | Monzo client and token refresh                |
 | `worker/src/buckets.ts`   | Grouping transactions into chart bars, by day and by category |
 | `worker/src/money-back.ts` | Crediting refunds against the purchase they reverse |

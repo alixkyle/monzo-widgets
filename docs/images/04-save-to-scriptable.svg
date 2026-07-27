@@ -1,14 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="390" viewBox="0 0 760 390">
   <rect width="760" height="390" rx="28" fill="#f4f6f8"/>
-  <text x="46" y="66" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="26" font-weight="700">Save the installer here</text>
-  <rect x="46" y="91" width="668" height="245" rx="18" fill="#fff" stroke="#d8dee5" stroke-width="2"/>
+  <text x="46" y="58" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="26" font-weight="700">Copy the installer, then paste it into Scriptable</text>
+
   <g font-family="-apple-system,BlinkMacSystemFont,sans-serif">
-    <text x="78" y="137" fill="#536578" font-size="15">iCloud Drive</text>
-    <text x="78" y="183" fill="#8b98a6" font-size="22">›</text>
-    <text x="111" y="183" fill="#11263d" font-size="20" font-weight="650">Scriptable</text>
-    <line x1="78" y1="204" x2="682" y2="204" stroke="#e2e7ec"/>
-    <text x="78" y="242" fill="#536578" font-size="15">File name</text>
-    <rect x="78" y="255" width="604" height="48" rx="9" fill="#f8fafb" stroke="#b9c4cf"/>
-    <text x="94" y="285" fill="#11263d" font-size="18">Money Installer.js</text>
+    <!-- Left: step 4 on the private widget page -->
+    <rect x="46" y="88" width="300" height="262" rx="18" fill="#001e3a"/>
+    <circle cx="76" cy="119" r="15" fill="#ff4f40"/>
+    <text x="71" y="125" fill="#fff" font-size="15" font-weight="700">4</text>
+    <text x="101" y="125" fill="#f7f5f2" font-size="15" font-weight="700">Install the iPhone widgets</text>
+
+    <rect x="70" y="145" width="252" height="82" rx="10" fill="#f7f5f2"/>
+    <g fill="#c3ccd6">
+      <rect x="84" y="159" width="180" height="7" rx="3.5"/>
+      <rect x="84" y="175" width="224" height="7" rx="3.5"/>
+      <rect x="84" y="191" width="150" height="7" rx="3.5"/>
+      <rect x="84" y="207" width="198" height="7" rx="3.5"/>
+    </g>
+
+    <rect x="70" y="241" width="252" height="46" rx="10" fill="#ff4f40"/>
+    <text x="196" y="270" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">Copy installer script</text>
+    <text x="196" y="316" fill="#8fa3b8" font-size="13" text-anchor="middle">On your .workers.dev page</text>
+
+    <!-- Arrow -->
+    <line x1="358" y1="219" x2="392" y2="219" stroke="#8b98a6" stroke-width="3" stroke-linecap="round"/>
+    <path d="M392 210 L406 219 L392 228 Z" fill="#8b98a6"/>
+
+    <!-- Right: Scriptable -->
+    <rect x="414" y="88" width="300" height="262" rx="18" fill="#fff" stroke="#d8dee5" stroke-width="2"/>
+    <text x="440" y="126" fill="#11263d" font-size="19" font-weight="700">Scripts</text>
+    <circle cx="684" cy="119" r="25" fill="none" stroke="#0a84ff" stroke-width="3" opacity="0.35"/>
+    <circle cx="684" cy="119" r="16" fill="#0a84ff"/>
+    <rect x="676" y="117" width="16" height="4" rx="2" fill="#fff"/>
+    <rect x="682" y="111" width="4" height="16" rx="2" fill="#fff"/>
+
+    <rect x="440" y="152" width="248" height="94" rx="12" fill="#f8fafb" stroke="#d8dee5"/>
+    <g fill="#c3ccd6">
+      <rect x="458" y="170" width="170" height="7" rx="3.5"/>
+      <rect x="458" y="186" width="212" height="7" rx="3.5"/>
+      <rect x="458" y="202" width="140" height="7" rx="3.5"/>
+      <rect x="458" y="218" width="190" height="7" rx="3.5"/>
+    </g>
+    <text x="440" y="278" fill="#11263d" font-size="17" font-weight="650">Monzo Installer</text>
+    <text x="440" y="304" fill="#536578" font-size="13">Tap +, hold and Paste, tap Done, then rename</text>
   </g>
 </svg>

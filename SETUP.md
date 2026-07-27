@@ -90,6 +90,8 @@ You should see JSON with `spentToday`, `balance`, and today's `transactions`.
    | `Monzo Balances & Pots` | [widget/money-pots.js](widget/money-pots.js) | Small |
 
 3. Run `Monzo Settings` and enter the Worker URL and `WIDGET_KEY` once.
+   If you hold a joint account, pick which one the widgets read under
+   **Monzo account** — otherwise they follow whichever Monzo lists first.
 4. Choose your category, Flex, day-boundary, total-balance, and pot options.
 5. Run each widget once inside Scriptable to check it renders.
 6. Long-press your home screen → **+** → **Scriptable** → pick a size →
@@ -107,6 +109,14 @@ widget showing your balance is readable by anyone glancing at your phone.
 Fix it in the portal and redo step 6.
 
 **403 from Monzo** — you haven't approved access in the Monzo app yet.
+
+**Wrong account** — every endpoint takes `&account=`, which accepts an account
+id, `personal`, or `joint`. With nothing set, the first current account Monzo
+returns wins. List the ids with:
+
+```
+https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev/accounts?key=YOUR_WIDGET_KEY
+```
 
 **Token refresh failed** — the refresh token was lost or revoked. Redo step 6.
 

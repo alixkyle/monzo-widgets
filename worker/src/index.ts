@@ -1,5 +1,6 @@
 import {
   Env,
+  Account,
   listAccounts,
   getBalance,
   listPots,
@@ -53,6 +54,8 @@ export default {
           return await handleWeeks(request, url, env);
         case "/pots":
           return await handlePots(request, url, env);
+        case "/accounts":
+          return await handleAccounts(request, url, env);
         case "/diagnose":
           return await handleDiagnose(request, url, env);
         default:
@@ -214,6 +217,72 @@ async function handleHome(url: URL, env: Env): Promise<Response> {
       },
     }
   );
+}
+
+function isCurrentAccount(account: Account): boolean {
+  return account.type === "uk_retail" || account.type === "uk_retail_joint";
+}
+
+/** "Joint account", or the Monzo description when there are several of a kind. */
+function accountLabel(account: Account, accounts: Account[]): string {
+  const kind =
+    account.type === "uk_retail_joint" ? "Joint account" : "Personal account";
+  const sameKind = accounts.filter((a) => a.type === account.type);
+  return sameKind.length > 1 ? `${kind} — ${account.description}` : kind;
+}
+
+/**
+ * Which current account the widgets read.
+ *
+ * `wanted` is an account id, or "personal"/"joint" so a widget can be pinned to
+ * a kind of account without knowing its id. With nothing chosen, this falls
+ * back to the first current account Monzo returns — for anyone holding a joint
+ * account that is usually, but not always, the personal one.
+ *
+ * An unresolvable choice returns undefined rather than falling back, so a stale
+ * id surfaces as an error instead of quietly showing the wrong account's money.
+ */
+function pickAccount(
+  accounts: Account[],
+  wanted: string | null
+): Account | undefined {
+  const current = accounts.filter(isCurrentAccount);
+  const choice = wanted?.trim();
+  if (!choice) return current[0];
+  if (choice === "joint") {
+    return current.find((a) => a.type === "uk_retail_joint");
+  }
+  if (choice === "personal") {
+    return current.find((a) => a.type === "uk_retail");
+  }
+  return current.find((a) => a.id === choice);
+}
+
+const NO_ACCOUNT =
+  "No matching current account. Open Monzo Settings on your iPhone and choose " +
+  "the account again.";
+
+/** Lets Monzo Settings show a picker without hard-coding account ids. */
+async function handleAccounts(
+  request: Request,
+  url: URL,
+  env: Env
+): Promise<Response> {
+  if (!authorised(request, url, env)) {
+    return json({ error: "Unauthorised" }, 401);
+  }
+
+  const accounts = await listAccounts(env);
+  const current = accounts.filter(isCurrentAccount);
+  return json({
+    accounts: current.map((account) => ({
+      id: account.id,
+      type: account.type,
+      label: accountLabel(account, current),
+      joint: account.type === "uk_retail_joint",
+    })),
+    defaultId: current[0]?.id ?? null,
+  });
 }
 
 /** Compares without leaking which character differed via response timing. */
@@ -433,10 +502,8 @@ async function handlePots(
   }
 
   const accounts = await listAccounts(env);
-  const main = accounts.find(
-    (a) => a.type === "uk_retail" || a.type === "uk_retail_joint"
-  );
-  if (!main) return json({ error: "No current account found" }, 404);
+  const main = pickAccount(accounts, url.searchParams.get("account"));
+  if (!main) return json({ error: NO_ACCOUNT }, 404);
   const flexAccount = accounts.find((a) => a.type === "uk_monzo_flex");
 
   const [balance, pots, flexBalance] = await Promise.all([
@@ -470,6 +537,7 @@ async function handlePots(
 }
 
 interface SpendOptions {
+  account: string | null;
   categoryFilter: Set<string>;
   excludedCategories: Set<string>;
   includeFlex: boolean;
@@ -494,6 +562,7 @@ function readSpendOptions(url: URL): SpendOptions {
   const outgoingTransferParam = url.searchParams.get("outgoingTransfers");
 
   return {
+    account: url.searchParams.get("account"),
     categoryFilter: names(url.searchParams.get("categories")),
     excludedCategories: names(url.searchParams.get("exclude"), "bills,savings"),
     includeFlex: url.searchParams.get("includeFlex") !== "false",
@@ -544,9 +613,7 @@ async function loadSpending(
   reference: Date
 ): Promise<Spending | null> {
   const accounts = await listAccounts(env);
-  const retail = accounts.find(
-    (a) => a.type === "uk_retail" || a.type === "uk_retail_joint"
-  );
+  const retail = pickAccount(accounts, options.account);
   if (!retail) return null;
   const flexAccount = accounts.find((a) => a.type === "uk_monzo_flex");
 
@@ -729,7 +796,7 @@ async function handleWeek(
     : recentSpendDays(DAYS, reference);
 
   const spending = await loadSpending(env, options, dayStarts, reference);
-  if (!spending) return json({ error: "No current account found" }, 404);
+  if (!spending) return json({ error: NO_ACCOUNT }, 404);
 
   const days = dayStarts.map((start, i) => ({
     date: start.toISOString(),
@@ -782,7 +849,7 @@ async function handleWeeks(
     : recentSpendWeeks(count, reference);
 
   const spending = await loadSpending(env, options, weekStarts, reference);
-  if (!spending) return json({ error: "No current account found" }, 404);
+  if (!spending) return json({ error: NO_ACCOUNT }, 404);
 
   const weeks = weekStarts.map((start, i) => ({
     start: start.toISOString(),
@@ -956,10 +1023,8 @@ async function handleSummary(
   }
 
   const accounts = await listAccounts(env);
-  const main = accounts.find(
-    (a) => a.type === "uk_retail" || a.type === "uk_retail_joint"
-  );
-  if (!main) return json({ error: "No current account found" }, 404);
+  const main = pickAccount(accounts, url.searchParams.get("account"));
+  if (!main) return json({ error: NO_ACCOUNT }, 404);
 
   const useMonzoDay = url.searchParams.get("dayStart") === "monzo";
   const since = useMonzoDay ? startOfSpendDay() : startOfCalendarDay();

@@ -131,6 +131,13 @@ The browser should confirm that Monzo is connected.
 
 If the paste is very long, that is normal — it is the whole installer.
 
+<details>
+<summary>Show the copy and paste steps</summary>
+
+![Copy the installer on the widget page, then paste it into a new Scriptable script](docs/images/04-save-to-scriptable.svg)
+
+</details>
+
 The installer will add:
 
 - `Monzo Today`
@@ -213,6 +220,7 @@ steps with `Monzo Bills & Savings`.
 
 Open Scriptable and run **Monzo Settings**. The options are grouped into:
 
+- **Monzo account**
 - **Today & Spending**
 - **Balances & Pots**
 - **Advanced transaction handling**
@@ -257,6 +265,18 @@ connection is stored separately, so you do not have to connect Monzo again.
 8. Tap **Verify and install**.
 
 The widgets will use the new password from their next refresh.
+
+**The widgets show the wrong account**
+
+If you hold a joint account as well as a personal one, Monzo decides which it
+lists first, and the widgets follow that unless you tell them otherwise.
+
+1. Open Scriptable and run **Monzo Settings**.
+2. Tap **Monzo account**.
+3. Tap the account you want. A tick marks the one in use.
+4. Tap **Done**, then open each widget's script once to refresh it.
+
+Every widget reads the same account, including balances and pots.
 
 **Nothing happens when I tap Connect Monzo**
 

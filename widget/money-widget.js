@@ -25,6 +25,7 @@ async function loadWidgetSettings() {
   const defaults = {
     workerUrl: "",
     widgetKey: "",
+    accountId: "",
     excludeBills: true,
     excludeSavings: true,
     includeFlexWeek: true,
@@ -73,12 +74,14 @@ async function fetchMoneyData() {
     `unlinkedIncoming=${encodeURIComponent(SETTINGS.unlinkedIncoming)}`,
     `cardRefunds=${encodeURIComponent(SETTINGS.cardRefunds)}`,
     `outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`,
+    `account=${encodeURIComponent(SETTINGS.accountId)}`,
   ].join("&");
 
   // Use Monzo Spending as the single source of truth for today's spending total.
   const week = await loadJSON(`${workerUrl}/week?${weekQuery}`, widgetKey);
   const summary = await loadJSON(
-    `${workerUrl}/summary?dayStart=${encodeURIComponent(SETTINGS.dayStart)}`,
+    `${workerUrl}/summary?dayStart=${encodeURIComponent(SETTINGS.dayStart)}` +
+      `&account=${encodeURIComponent(SETTINGS.accountId)}`,
     widgetKey
   );
   const today = week.days?.[week.days.length - 1];

@@ -51,6 +51,7 @@ async function loadWidgetSettings() {
   const defaults = {
     workerUrl: "",
     widgetKey: "",
+    accountId: "",
     excludeBills: true,
     excludeSavings: true,
     includeFlexWeek: true,
@@ -91,6 +92,7 @@ async function fetchWeeks() {
     `unlinkedIncoming=${encodeURIComponent(SETTINGS.unlinkedIncoming)}`,
     `cardRefunds=${encodeURIComponent(SETTINGS.cardRefunds)}`,
     `outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`,
+    `account=${encodeURIComponent(SETTINGS.accountId)}`,
   ].join("&");
   const req = new Request(`${workerUrl}/weeks?${query}`);
   req.headers = { Authorization: `Bearer ${widgetKey}` };

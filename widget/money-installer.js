@@ -70,6 +70,34 @@ async function checkWorker(workerUrl, widgetKey) {
   }
 }
 
+/**
+ * Asks which current account to read, but only when there is a real choice.
+ * Returns null when the question does not apply, or when the widget service is
+ * an older deployment without /accounts — the widgets then behave as before.
+ */
+async function chooseAccount(workerUrl, widgetKey, currentId) {
+  let accounts;
+  try {
+    const request = new Request(`${workerUrl}/accounts`);
+    request.headers = { Authorization: `Bearer ${widgetKey}` };
+    request.timeoutInterval = 20;
+    accounts = (await request.loadJSON()).accounts;
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(accounts) || accounts.length < 2) return null;
+  if (accounts.some((account) => account.id === currentId)) return null;
+
+  const alert = new Alert();
+  alert.title = "Which Monzo account?";
+  alert.message = "Your widgets will show this account. You can change it later in Monzo Settings.";
+  for (const account of accounts) alert.addAction(account.label);
+  alert.addCancelAction("Use the first one");
+
+  const choice = await alert.presentSheet();
+  return choice < 0 ? null : accounts[choice].id;
+}
+
 async function install() {
 const connection = new Alert();
 connection.title = "Install Monzo Widgets";
@@ -140,7 +168,14 @@ try {
     existing = {};
   }
 
+  const chosenAccount = await chooseAccount(
+    workerUrl,
+    widgetKey,
+    existing.accountId
+  );
+
   const settings = {
+    accountId: "",
     excludeBills: true,
     excludeSavings: true,
     includeFlexWeek: true,
@@ -156,6 +191,7 @@ try {
     ...existing,
     workerUrl,
     widgetKey,
+    ...(chosenAccount ? { accountId: chosenAccount } : {}),
   };
   fm.writeString(settingsPath, JSON.stringify(settings, null, 2));
 

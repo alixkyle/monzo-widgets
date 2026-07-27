@@ -21,6 +21,7 @@ async function loadWidgetSettings() {
   const defaults = {
     workerUrl: "",
     widgetKey: "",
+    accountId: "",
     includeFlexWeek: true,
     dayStart: "midnight",
     splitRepayments: "original",
@@ -55,7 +56,8 @@ async function fetchWeek() {
       `&splitRepayments=${encodeURIComponent(SETTINGS.splitRepayments)}` +
       `&unlinkedIncoming=${encodeURIComponent(SETTINGS.unlinkedIncoming)}` +
       `&cardRefunds=${encodeURIComponent(SETTINGS.cardRefunds)}` +
-      `&outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`
+      `&outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}` +
+      `&account=${encodeURIComponent(SETTINGS.accountId)}`
   );
   req.headers = { Authorization: `Bearer ${widgetKey}` };
   req.timeoutInterval = 15;

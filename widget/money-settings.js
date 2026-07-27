@@ -7,6 +7,7 @@ const SETTINGS_FILE = "money-app-settings.json";
 const DEFAULTS = {
   workerUrl: "",
   widgetKey: "",
+  accountId: "",
   excludeBills: true,
   excludeSavings: true,
   includeFlexWeek: true,
@@ -38,6 +39,14 @@ function saveSettings(settings) {
   fm.writeString(settingsPath, JSON.stringify(settings, null, 2));
 }
 
+async function notice(title, message) {
+  const alert = new Alert();
+  alert.title = title;
+  alert.message = message;
+  alert.addCancelAction("OK");
+  await alert.presentAlert();
+}
+
 function state(value) {
   return value ? "On" : "Off";
 }
@@ -63,6 +72,55 @@ async function configureConnection(settings) {
   settings.workerUrl = alert.textFieldValue(0).trim().replace(/\/+$/, "");
   settings.widgetKey = alert.textFieldValue(1).trim();
   return Boolean(settings.workerUrl && settings.widgetKey);
+}
+
+/**
+ * Monzo returns the personal and joint accounts in an order we cannot control,
+ * so anyone holding both needs to say which one the widgets should read.
+ */
+async function chooseAccount(settings) {
+  if (!settings.workerUrl || !settings.widgetKey) {
+    await notice(
+      "Connect first",
+      "Enter your Worker URL and widget password before choosing an account."
+    );
+    return;
+  }
+
+  let accounts;
+  try {
+    const req = new Request(`${settings.workerUrl}/accounts`);
+    req.headers = { Authorization: `Bearer ${settings.widgetKey}` };
+    req.timeoutInterval = 15;
+    accounts = (await req.loadJSON()).accounts;
+  } catch {
+    accounts = null;
+  }
+
+  if (!accounts || !accounts.length) {
+    await notice(
+      "Could not load your accounts",
+      "Check the Worker URL and widget password. If the widget service was deployed a while ago, deploy it again to add account switching."
+    );
+    return;
+  }
+
+  const alert = new Alert();
+  alert.title = "Monzo account";
+  alert.message = "Every widget reads the account you choose here.";
+  for (const account of accounts) {
+    alert.addAction(
+      account.id === settings.accountId
+        ? `${account.label}  ✓`
+        : account.label
+    );
+  }
+  alert.addCancelAction("Back");
+
+  const choice = await alert.presentSheet();
+  if (choice < 0) return;
+  settings.accountId = accounts[choice].id;
+  saveSettings(settings);
 }
 
 let settings = await loadSettings();
@@ -235,6 +293,9 @@ async function resetSettings() {
     ...DEFAULTS,
     workerUrl: settings.workerUrl,
     widgetKey: settings.widgetKey,
+    // Kept deliberately: resetting it would silently move a joint-account
+    // household back onto the personal account.
+    accountId: settings.accountId,
   };
   saveSettings(settings);
 }
@@ -244,6 +305,7 @@ while (true) {
   alert.title = "Monzo Settings";
   alert.message = "Choose the part of your widgets you want to change.";
   alert.addAction("Connection");
+  alert.addAction("Monzo account");
   alert.addAction("Today & Spending");
   alert.addAction("Balances & Pots");
   alert.addAction("Advanced transaction handling");
@@ -256,12 +318,14 @@ while (true) {
   if (choice === 0) {
     if (await configureConnection(settings)) saveSettings(settings);
   } else if (choice === 1) {
-    await spendingSettings();
+    await chooseAccount(settings);
   } else if (choice === 2) {
-    await balanceSettings();
+    await spendingSettings();
   } else if (choice === 3) {
-    await transactionSettings();
+    await balanceSettings();
   } else if (choice === 4) {
+    await transactionSettings();
+  } else if (choice === 5) {
     await resetSettings();
   }
 }

@@ -16,6 +16,7 @@ async function loadWidgetSettings() {
   const defaults = {
     workerUrl: "",
     widgetKey: "",
+    accountId: "",
     subtractFlexFromTotal: true,
     hideZeroPots: true,
     showCurrentAccount: true,
@@ -40,7 +41,9 @@ const SETTINGS = await loadWidgetSettings();
 async function fetchPots() {
   const workerUrl = SETTINGS.workerUrl || WORKER_URL;
   const widgetKey = SETTINGS.widgetKey || WIDGET_KEY;
-  const req = new Request(`${workerUrl}/pots`);
+  const req = new Request(
+    `${workerUrl}/pots?account=${encodeURIComponent(SETTINGS.accountId)}`
+  );
   req.headers = { Authorization: `Bearer ${widgetKey}` };
   req.timeoutInterval = 15;
   return req.loadJSON();
