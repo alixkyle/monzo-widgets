@@ -49,17 +49,28 @@ const REQUIRED_WORKER_VERSION = 2;
  */
 async function checkWorkerVersion(workerUrl) {
   let version = 0;
+  let response;
   try {
     const request = new Request(`${workerUrl}/version`);
     request.timeoutInterval = 20;
-    const response = await request.loadJSON();
-    if (response && response.service === "monzo-widgets") {
-      version = Number(response.version) || 0;
-    }
+    response = await request.loadJSON();
   } catch {
-    // Unreachable or not JSON: fall through to the out-of-date message, which
-    // is the likeliest cause and does no harm if the URL is simply wrong.
-    version = 0;
+    // Nothing answered at all. Blaming the Worker here sends people off to
+    // update a service that is fine, when the address is what is wrong — and
+    // the commonest mistake is dropping the name before the first dot.
+    const unreachable = new Error(
+      `Nothing answered at ${workerUrl}\n\n` +
+        "Check the address. It should look like\n" +
+        "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev\n\n" +
+        "including the part before the first dot. You can copy it from the " +
+        "page you set the widgets up on."
+    );
+    unreachable.title = "Check the address";
+    throw unreachable;
+  }
+
+  if (response && response.service === "monzo-widgets") {
+    version = Number(response.version) || 0;
   }
 
   if (version < REQUIRED_WORKER_VERSION) {
@@ -142,16 +153,95 @@ async function chooseAccount(workerUrl, widgetKey, currentId) {
   return choice < 0 ? null : accounts[choice].id;
 }
 
+// Scriptable owns these three lines and rewrites them on save, so they must
+// survive an update or the script loses its icon on every run.
+const SCRIPTABLE_HEADER =
+  /^\/\/ Variables used by Scriptable\.\n\/\/ These must be at the very top of the file\. Do not edit\.\n\/\/ icon-[^\n]*\n/;
+
+function splitHeader(code) {
+  const match = code.match(SCRIPTABLE_HEADER);
+  return match ? [match[0], code.slice(match[0].length)] : ["", code];
+}
+
+/**
+ * Replaces this script with the current one from GitHub.
+ *
+ * The installer updates every widget but nothing updates the installer, so a
+ * copy saved before a widget existed installs everything except that widget —
+ * successfully, and with no hint that anything is missing. Updating itself
+ * first is the only way that self-corrects.
+ *
+ * Returns true when it rewrote itself, meaning the code now on disk is not the
+ * code currently running and the user has to run it once more.
+ */
+async function updateSelf() {
+  let latest;
+  try {
+    const request = new Request(`${RAW_BASE}/money-installer.js`);
+    request.timeoutInterval = 20;
+    latest = await request.loadString();
+  } catch {
+    return false;
+  }
+  // Never overwrite a working installer with a truncated or wrong download.
+  if (!latest || !latest.includes("REQUIRED_WORKER_VERSION")) return false;
+
+  try {
+    const fm = FileManager.iCloud();
+    const own = fm.joinPath(fm.documentsDirectory(), `${Script.name()}.js`);
+    if (!fm.fileExists(own)) return false;
+    await fm.downloadFileFromiCloud(own);
+    const [header, current] = splitHeader(fm.readString(own));
+    if (current === latest) return false;
+    fm.writeString(own, header + latest);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Whatever the last successful install saved, so nothing has to be retyped. */
+async function readSavedSettings() {
+  try {
+    const fm = FileManager.iCloud();
+    const path = fm.joinPath(
+      fm.documentsDirectory(),
+      "money-app-settings.json"
+    );
+    if (!fm.fileExists(path)) return {};
+    await fm.downloadFileFromiCloud(path);
+    return JSON.parse(fm.readString(path)) || {};
+  } catch {
+    return {};
+  }
+}
+
 async function install() {
+if (await updateSelf()) {
+  const updated = new Alert();
+  updated.title = "Installer updated";
+  updated.message =
+    "This installer was out of date and has just updated itself.\n\nTap Run again to install the current set of widgets.";
+  updated.addCancelAction("OK");
+  await updated.presentAlert();
+  return;
+}
+
+const saved = await readSavedSettings();
+
 const connection = new Alert();
 connection.title = "Install Monzo Widgets";
-connection.message =
-  "Enter the values from your Cloudflare setup. Existing Money widget scripts will be updated.";
+connection.message = saved.workerUrl
+  ? "Check these are still right, then install. Your existing widgets will be updated."
+  : "Enter the values from your Cloudflare setup. Existing Money widget scripts will be updated.";
+// Prefilled from the last install: retyping the address by hand is how the
+// wrong one gets entered, and a wrong address is hard to tell from a broken
+// service. The placeholder still shows the shape for a first-time setup.
 connection.addTextField(
-  "Worker URL",
-  "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev"
+  "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev",
+  saved.workerUrl || ""
 );
-connection.addSecureTextField("Widget key", "");
+connection.addSecureTextField("Widget key", saved.widgetKey || "");
 connection.addAction("Verify and install");
 connection.addCancelAction("Cancel");
 
@@ -174,7 +264,7 @@ try {
   await checkWorkerVersion(workerUrl);
 } catch (error) {
   const outOfDate = new Alert();
-  outOfDate.title = "Update your widget service";
+  outOfDate.title = error.title || "Update your widget service";
   outOfDate.message = String(error).replace(/^Error:\s*/, "");
   outOfDate.addCancelAction("OK");
   await outOfDate.presentAlert();
@@ -216,15 +306,7 @@ try {
   }
 
   const settingsPath = fm.joinPath(directory, "money-app-settings.json");
-  let existing = {};
-  try {
-    if (fm.fileExists(settingsPath)) {
-      await fm.downloadFileFromiCloud(settingsPath);
-      existing = JSON.parse(fm.readString(settingsPath));
-    }
-  } catch {
-    existing = {};
-  }
+  const existing = saved;
 
   const chosenAccount = await chooseAccount(
     workerUrl,

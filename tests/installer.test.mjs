@@ -31,12 +31,38 @@ const INSTALLED_FILES = [
  * `workerVersion` of 0 stands for a deployment predating /version, which
  * answers 404 there — the situation every user is in until their Worker syncs.
  */
-async function runInstaller({ workerVersion }) {
+const installerSource = fs.readFileSync(
+  path.join(root, "widget", "money-installer.js"),
+  "utf8"
+);
+
+/**
+ * `installerOnDisk` stands for the copy saved in Scriptable, which is not
+ * necessarily the copy published upstream. Defaults to the current one, so
+ * tests that are not about self-updating are unaffected by it.
+ *
+ * `reachable: false` stands for a Worker URL that resolves to nothing, which
+ * has to read differently from a Worker that answers but is out of date.
+ */
+async function runInstaller({
+  workerVersion,
+  installerOnDisk = installerSource,
+  reachable = true,
+  savedSettings = null,
+}) {
   const writes = new Map();
   for (const filename of LEGACY_FILES) {
     writes.set(`/icloud/${filename}`, "legacy");
   }
+  writes.set("/icloud/Monzo Installer.js", installerOnDisk);
+  if (savedSettings) {
+    writes.set(
+      "/icloud/money-app-settings.json",
+      JSON.stringify(savedSettings)
+    );
+  }
   const alerts = [];
+  const prompts = [];
 
   class AlertMock {
     constructor() {
@@ -58,6 +84,8 @@ async function runInstaller({ workerVersion }) {
     async presentAlert() {
       alerts.push({ title: this.title, message: this.message });
       if (this.title === "Install Monzo Widgets") {
+        // What the fields were prefilled with, before the user touches them.
+        prompts.push([...this.values]);
         this.values = [
           "https://monzo-widgets.example.workers.dev",
           "test-widget-key",
@@ -82,6 +110,8 @@ async function runInstaller({ workerVersion }) {
     }
 
     async loadJSON() {
+      if (!reachable) throw new Error("Could not connect to the server.");
+
       // /version is deliberately fetched without a key, so the auth assertion
       // below must not apply to it.
       if (this.url.endsWith("/version")) {
@@ -134,16 +164,12 @@ async function runInstaller({ workerVersion }) {
     Alert: AlertMock,
     Request: RequestMock,
     FileManager: { iCloud: () => fileManager },
-    Script: { complete() {} },
+    Script: { complete() {}, name: () => "Monzo Installer" },
     URL,
     console,
   });
 
-  const source = fs.readFileSync(
-    path.join(root, "widget", "money-installer.js"),
-    "utf8"
-  );
-  const module = new vm.SourceTextModule(source, {
+  const module = new vm.SourceTextModule(installerSource, {
     context,
     identifier: "money-installer.js",
   });
@@ -152,7 +178,7 @@ async function runInstaller({ workerVersion }) {
   });
   await module.evaluate();
 
-  return { writes, alerts };
+  return { writes, alerts, prompts };
 }
 
 test("a current Worker installs every script and saves the settings", async () => {
@@ -174,6 +200,96 @@ test("a current Worker installs every script and saves the settings", async () =
   assert.equal(settings.widgetKey, "test-widget-key");
   assert.equal(settings.dayStart, "midnight");
   assert.equal(settings.subtractFlexFromTotal, true);
+});
+
+test("an out-of-date installer replaces itself and stops", async () => {
+  const { writes, alerts } = await runInstaller({
+    workerVersion: 2,
+    installerOnDisk: "// an old installer that knows nothing of new widgets\n",
+  });
+
+  assert.equal(writes.get("/icloud/Monzo Installer.js"), installerSource);
+
+  const updated = alerts.find((a) => a.title === "Installer updated");
+  assert.ok(updated, "the self-update was not reported");
+  assert.match(updated.message, /Run again/);
+
+  // Stopping matters: the code that just landed on disk is not the code
+  // running, so its widget list is still the old one.
+  assert.ok(
+    !writes.has("/icloud/Monzo 4 Weeks.js"),
+    "it installed widgets using the superseded list"
+  );
+});
+
+test("a current installer leaves itself alone and installs", async () => {
+  const { writes, alerts } = await runInstaller({ workerVersion: 2 });
+
+  assert.ok(!alerts.some((a) => a.title === "Installer updated"));
+  assert.equal(writes.get("/icloud/Monzo Installer.js"), installerSource);
+  assert.ok(writes.has("/icloud/Monzo 4 Weeks.js"));
+});
+
+test("Scriptable's own header survives a self-update", async () => {
+  const header =
+    "// Variables used by Scriptable.\n" +
+    "// These must be at the very top of the file. Do not edit.\n" +
+    "// icon-color: deep-brown; icon-glyph: magic;\n";
+
+  // Identical to upstream apart from the header: it must not count as a change,
+  // or every single run would update itself and refuse to install anything.
+  const unchanged = await runInstaller({
+    workerVersion: 2,
+    installerOnDisk: header + installerSource,
+  });
+  assert.ok(!unchanged.alerts.some((a) => a.title === "Installer updated"));
+
+  const stale = await runInstaller({
+    workerVersion: 2,
+    installerOnDisk: `${header}// something older\n`,
+  });
+  assert.equal(
+    stale.writes.get("/icloud/Monzo Installer.js"),
+    header + installerSource,
+    "the icon settings were lost"
+  );
+});
+
+test("an address that answers nothing blames the address, not the Worker", async () => {
+  const { alerts, writes } = await runInstaller({
+    workerVersion: 2,
+    reachable: false,
+  });
+
+  const problem = alerts.find((a) => a.title === "Check the address");
+  assert.ok(problem, "an unreachable address was not called out");
+  assert.match(problem.message, /monzo-widgets\.YOUR-SUBDOMAIN/);
+  assert.ok(
+    !alerts.some((a) => a.title === "Update your widget service"),
+    "it sent the user off to update a Worker that may be fine"
+  );
+  assert.ok(!writes.has("/icloud/Monzo 4 Weeks.js"));
+});
+
+test("the saved Worker URL and key are offered back, not retyped", async () => {
+  const { prompts } = await runInstaller({
+    workerVersion: 2,
+    savedSettings: {
+      workerUrl: "https://monzo-widgets.example.workers.dev",
+      widgetKey: "test-widget-key",
+      accountId: "acc_joint",
+    },
+  });
+
+  assert.deepEqual(prompts[0], [
+    "https://monzo-widgets.example.workers.dev",
+    "test-widget-key",
+  ]);
+});
+
+test("a first-time install has nothing to prefill", async () => {
+  const { prompts } = await runInstaller({ workerVersion: 2 });
+  assert.deepEqual(prompts[0], ["", ""]);
 });
 
 test("an out-of-date Worker is named as the problem, with the fix", async () => {

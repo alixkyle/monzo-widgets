@@ -254,9 +254,14 @@ matches today's bar in every one of them.
 There are two halves to keep current, and they update in different ways.
 
 **The widgets on your phone.** Run **Monzo Installer** again. It refreshes the
-scripts without touching your Worker connection or preferences. If you
-previously used the older `Money…` script names, edit each Home Screen widget
-once and select its new `Monzo…` name.
+scripts without touching your Worker connection or preferences, and fills in
+your Worker address and widget password from last time, so there is nothing to
+retype. If you previously used the older `Money…` script names, edit each Home
+Screen widget once and select its new `Monzo…` name.
+
+If it says **Installer updated**, it has replaced itself with a newer version
+that knows about widgets added since you saved it. Tap **OK** and run it once
+more; the second run installs them.
 
 **Your private widget service.** Once **Step 5** on your `.workers.dev` page is
 done, this updates itself daily and there is normally nothing to do.
