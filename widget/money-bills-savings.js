@@ -64,6 +64,19 @@ async function fetchWeek() {
   return req.loadJSON();
 }
 
+/** "LAST 7 DAYS" for the current week, otherwise the dates it covers. */
+function periodLabel(data) {
+  if (data.weeksAgo === 0) return "LAST 7 DAYS";
+
+  const opts = { day: "numeric", month: "short", timeZone: "Europe/London" };
+  const from = new Date(data.days[0].date).toLocaleDateString("en-GB", opts);
+  const to = new Date(data.days[data.days.length - 1].date).toLocaleDateString(
+    "en-GB",
+    opts
+  );
+  return `${from} – ${to}`.toUpperCase();
+}
+
 function money(minorUnits) {
   return `£${(Math.abs(minorUnits) / 100).toFixed(2)}`;
 }
@@ -159,7 +172,7 @@ function buildWidget(data) {
   const header = w.addStack();
   header.layoutHorizontally();
   header.centerAlignContent();
-  const title = header.addText("BILLS + SAVINGS");
+  const title = header.addText(periodLabel(data));
   title.font = Font.semiboldSystemFont(10);
   title.textColor = COLORS.dim;
   header.addSpacer();
