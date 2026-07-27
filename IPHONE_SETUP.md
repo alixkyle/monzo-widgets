@@ -112,38 +112,41 @@ The browser should confirm that Monzo is connected.
 
 ## Step 5: Install the Scriptable widgets
 
-1. Open Scriptable once, then return to Safari. This creates its iCloud folder.
-2. Open the
-   [Monzo Installer file](https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js).
-3. Tap Safari's **Share** button.
-4. Tap **Save to Files**.
-5. Choose **iCloud Drive → Scriptable**.
-6. Save the file as `Monzo Installer.js`.
-7. Open Scriptable.
-8. Open **Monzo Installer** and tap the triangular Run button.
-9. When asked for the **Worker URL**, enter the Cloudflare address ending in
-   `.workers.dev`. Do not add `/auth/callback`.
-10. When asked for the **Widget key**, enter the same `WIDGET_KEY` saved in
+1. Open Scriptable once so it finishes setting itself up, then return to Safari.
+2. Go back to the Cloudflare address ending in `.workers.dev`.
+3. In **Step 4** on that page, tap **Copy installer script**. The button turns
+   green and says **Copied**.
+4. Open Scriptable.
+5. Tap the blue **+** button at the top right. A blank script opens.
+6. Press and hold in the empty script area, then tap **Paste**.
+7. Tap **Done** at the top left.
+8. Press and hold the new script's tile, tap **Rename**, and name it
+   `Monzo Installer`.
+9. Open **Monzo Installer** and tap the triangular Run button.
+10. When asked for the **Worker URL**, enter the Cloudflare address ending in
+    `.workers.dev`. Do not add `/auth/callback`.
+11. When asked for the **Widget key**, enter the same `WIDGET_KEY` saved in
     Step 2.
-11. Tap **Verify and install**.
+12. Tap **Verify and install**.
 
-<details>
-<summary>Show where to save Monzo Installer</summary>
-
-![Save Monzo Installer in the Scriptable iCloud folder](docs/images/04-save-to-scriptable.svg)
-
-</details>
+If the paste is very long, that is normal — it is the whole installer.
 
 The installer will add:
 
 - `Monzo Today`
 - `Monzo Spending`
+- `Monzo Categories`
+- `Monzo 4 Weeks`
 - `Monzo Bills & Savings`
 - `Monzo Balances & Pots`
 - `Monzo Settings`
 
-It also checks the Monzo connection, balance, weekly spending, pots, installed
-scripts, and saved settings. Continue when it says **Everything is ready**.
+You do not have to use them all. Put the ones you like on the Home Screen and
+ignore the rest.
+
+It also checks the Monzo connection, balance, weekly spending, four-week
+spending, pots, installed scripts, and saved settings. Continue when it says
+**Everything is ready**.
 
 Run **Monzo Settings** if you want to review the recommended defaults.
 
@@ -165,17 +168,37 @@ Recommended sizes:
 | --- | --- |
 | `Monzo Today` | Small or medium |
 | `Monzo Spending` | Medium |
+| `Monzo Categories` | Medium |
+| `Monzo 4 Weeks` | Medium |
 | `Monzo Bills & Savings` | Medium |
 | `Monzo Balances & Pots` | Small |
 
 Setup is complete.
 
-### Swipe through four weeks
+### Which weekly chart to choose
 
-You can stack four copies of the same weekly widget and swipe between them:
+`Monzo Spending` and `Monzo Categories` show the same seven days and the same
+total. Pick whichever split is more useful:
+
+| Script | Each bar is split by |
+| --- | --- |
+| `Monzo Spending` | How the money left the account: card, transfers, Flex |
+| `Monzo Categories` | Monzo's own categories: eating out, groceries, transport |
+
+`Monzo Categories` names the five biggest categories of the week and groups the
+rest as **Other**, so the legend stays readable. The colours match the ones in
+the Monzo app's Spending tab.
+
+### See four weeks at once
+
+`Monzo 4 Weeks` is a single medium widget showing the last four weeks as four
+bars, coloured by the same categories. Add it the same way as any other widget.
+
+If you would rather swipe through the weeks one at a time, you can stack four
+copies of a weekly widget instead:
 
 1. Add four **medium** Scriptable widgets.
-2. Edit each widget and choose `Monzo Spending`.
+2. Edit each widget and choose `Monzo Spending` or `Monzo Categories`.
 3. In **Parameter**, enter `0` on the first, `1` on the second, `2` on the
    third, and `3` on the fourth.
 4. Long-press the Home Screen, then drag the four widgets on top of one another
@@ -194,8 +217,8 @@ Open Scriptable and run **Monzo Settings**. The options are grouped into:
 - **Balances & Pots**
 - **Advanced transaction handling**
 
-Monzo Today and Monzo Spending use the same spending rules, so today's headline
-matches today's bar.
+Monzo Today and all the spending charts use the same rules, so today's headline
+matches today's bar in every one of them.
 
 ## Install updates later
 
@@ -216,6 +239,40 @@ Copy the Monzo Redirect URL from the Cloudflare page again. It must end in
 
 The `WIDGET_KEY` entered on the Cloudflare page does not exactly match the one
 created in Step 2.
+
+**I lost the widget password**
+
+Nobody can look the old one up, but you can safely replace it. Your Monzo
+connection is stored separately, so you do not have to connect Monzo again.
+
+1. Open [dash.cloudflare.com](https://dash.cloudflare.com/) and sign in.
+2. Tap **Compute (Workers)**, then open your `monzo-widgets` Worker.
+3. Tap **Settings**, then **Variables and Secrets**.
+4. Find `WIDGET_KEY` and tap **Edit**.
+5. Enter a new password of at least 20 characters and save it in the Passwords
+   app under `Monzo Widgets` before continuing.
+6. Save the change and wait for Cloudflare to finish deploying.
+7. Open Scriptable, run **Monzo Installer**, and enter the new widget password
+   when it asks for the **Widget key**. Leave the Worker URL as it is.
+8. Tap **Verify and install**.
+
+The widgets will use the new password from their next refresh.
+
+**Nothing happens when I tap Connect Monzo**
+
+Older versions of the widget service could not open the Monzo sign-in page from
+that button. Deploy the service again using the button in Step 2 to pick up the
+fix, keeping the same names and the same three private values.
+
+To connect straight away without redeploying, open this address in Safari,
+replacing both capitalised parts:
+
+```
+https://YOUR-WORKER.workers.dev/auth?key=YOUR-WIDGET-PASSWORD
+```
+
+Clear that page from Safari's history afterwards, because the address contains
+your widget password.
 
 **Monzo returns 403**
 

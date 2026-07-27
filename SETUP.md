@@ -49,6 +49,11 @@ npx wrangler secret put MONZO_CLIENT_SECRET
 npx wrangler secret put WIDGET_KEY
 ```
 
+Secrets are write-only, so a lost `WIDGET_KEY` cannot be read back. Run
+`npx wrangler secret put WIDGET_KEY` again to overwrite it, then re-run the
+Scriptable installer with the new value. The Monzo tokens live in KV, so
+replacing the key does not disconnect your account.
+
 Go back to step 1 and make sure the redirect URI in the Monzo portal matches
 the Worker URL exactly, including `/auth/callback`.
 
@@ -79,6 +84,8 @@ You should see JSON with `spentToday`, `balance`, and today's `transactions`.
    | `Monzo Settings` | [widget/money-settings.js](widget/money-settings.js) | Run in app |
    | `Monzo Today` | [widget/money-widget.js](widget/money-widget.js) | Any |
    | `Monzo Spending` | [widget/money-week.js](widget/money-week.js) | Medium |
+   | `Monzo Categories` | [widget/money-week-categories.js](widget/money-week-categories.js) | Medium |
+   | `Monzo 4 Weeks` | [widget/money-month.js](widget/money-month.js) | Medium |
    | `Monzo Bills & Savings` | [widget/money-bills-savings.js](widget/money-bills-savings.js) | Medium |
    | `Monzo Balances & Pots` | [widget/money-pots.js](widget/money-pots.js) | Small |
 

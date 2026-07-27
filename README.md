@@ -25,14 +25,41 @@ in one always-on place avoids that; the widget just fetches plain JSON.
 
 | Path                      | What it is                                    |
 | ------------------------- | --------------------------------------------- |
-| `worker/src/index.ts`     | HTTP routes: `/auth`, `/auth/callback`, `/summary` |
+| `worker/src/index.ts`     | HTTP routes: `/auth`, `/auth/callback`, `/summary`, `/week`, `/weeks`, `/pots` |
 | `worker/src/monzo.ts`     | Monzo client and token refresh                |
+| `worker/src/buckets.ts`   | Grouping transactions into chart bars, by day and by category |
+| `worker/src/money-back.ts` | Crediting refunds against the purchase they reverse |
 | `widget/money-widget.js`  | Monzo Today widget                            |
 | `widget/money-pots.js`    | Monzo Balances & Pots widget                  |
 | `widget/money-week.js`    | Monzo Spending weekly chart                   |
+| `widget/money-week-categories.js` | Monzo Categories weekly chart         |
+| `widget/money-month.js`   | Monzo 4 Weeks chart                           |
 | `widget/money-bills-savings.js` | Monzo Bills & Savings weekly chart     |
 | `widget/money-settings.js` | Monzo Settings                               |
 | `widget/money-installer.js` | Monzo Installer                              |
+
+## The two weekly charts
+
+`Monzo Spending` and `Monzo Categories` cover the same seven days and print the
+same total. They differ only in how each bar is split:
+
+- **Monzo Spending** splits by how the money left the account — card, transfers
+  to people, then Flex.
+- **Monzo Categories** splits by Monzo's own categories — eating out,
+  groceries, transport — the way the Spending tab in the Monzo app does. The
+  five biggest categories of the week are named and the rest become "Other".
+
+`Monzo 4 Weeks` uses the same category colours across four rolling seven-day
+blocks, and its last bar covers the same seven days as the weekly charts.
+
+The two normally print the same figure for that week. They can differ when a
+refund arrives for a purchase more than seven days old: the four-week chart can
+see the original purchase and credits the refund there, while the weekly chart
+can only credit something inside its own window. This is the same reason two
+`Monzo Spending` widgets on different `weeks` parameters can disagree.
+
+Both category charts read the same settings as `Monzo Spending`, so excluding
+bills or Flex changes all of them together.
 
 ## What `/summary` returns
 

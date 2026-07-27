@@ -10,6 +10,8 @@ const RAW_BASE =
 const FILES = [
   ["money-widget.js", "Monzo Today.js"],
   ["money-week.js", "Monzo Spending.js"],
+  ["money-week-categories.js", "Monzo Categories.js"],
+  ["money-month.js", "Monzo 4 Weeks.js"],
   ["money-bills-savings.js", "Monzo Bills & Savings.js"],
   ["money-pots.js", "Monzo Balances & Pots.js"],
   ["money-settings.js", "Monzo Settings.js"],
@@ -43,6 +45,11 @@ async function checkWorker(workerUrl, widgetKey) {
       name: "Weekly spending",
       path: "/week?dayStart=midnight",
       valid: (data) => Array.isArray(data.days) && data.days.length === 7,
+    },
+    {
+      name: "Four-week spending",
+      path: "/weeks?count=4&dayStart=midnight",
+      valid: (data) => Array.isArray(data.weeks) && data.weeks.length === 4,
     },
     {
       name: "Pots",
@@ -169,7 +176,7 @@ try {
   const done = new Alert();
   done.title = "Everything is ready";
   done.message =
-    "Monzo, weekly spending, pots, all five scripts, and your settings passed the checks.\n\nYou can now add the widgets to the Home Screen. If you used the older Money script names, reselect each widget's new Monzo script once.";
+    "Monzo, weekly spending, four-week spending, pots, all seven scripts, and your settings passed the checks.\n\nYou can now add the widgets to the Home Screen. If you used the older Money script names, reselect each widget's new Monzo script once.";
   done.addAction("Done");
   await done.presentAlert();
 } catch (error) {

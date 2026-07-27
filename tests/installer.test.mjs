@@ -65,6 +65,9 @@ class RequestMock {
     if (this.url.endsWith("/week?dayStart=midnight")) {
       return { days: new Array(7).fill({ total: 0 }) };
     }
+    if (this.url.endsWith("/weeks?count=4&dayStart=midnight")) {
+      return { weeks: new Array(4).fill({ total: 0 }) };
+    }
     if (this.url.endsWith("/pots")) {
       return { pots: [] };
     }
@@ -112,6 +115,8 @@ await module.evaluate();
 for (const filename of [
   "Monzo Today.js",
   "Monzo Spending.js",
+  "Monzo Categories.js",
+  "Monzo 4 Weeks.js",
   "Monzo Bills & Savings.js",
   "Monzo Balances & Pots.js",
   "Monzo Settings.js",

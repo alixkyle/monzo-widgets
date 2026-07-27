@@ -89,18 +89,18 @@ async function presentOptions(title, message, actions) {
 async function spendingSettings() {
   await presentOptions(
     "Spending widgets",
-    "These settings keep Monzo Today and Monzo Spending aligned. Bills and Savings also affect the separate chart.",
+    "These settings keep Monzo Today and every spending chart aligned. Bills and Savings also affect the separate chart.",
     [
       {
         label: () =>
-          `Bills in Monzo Spending: ${
+          `Bills in spending charts: ${
             settings.excludeBills ? "Excluded" : "Included"
           }`,
         run: () => (settings.excludeBills = !settings.excludeBills),
       },
       {
         label: () =>
-          `Savings in Monzo Spending: ${
+          `Savings in spending charts: ${
             settings.excludeSavings ? "Excluded" : "Included"
           }`,
         run: () => (settings.excludeSavings = !settings.excludeSavings),
@@ -158,7 +158,7 @@ async function balanceSettings() {
 async function transactionSettings() {
   await presentOptions(
     "Transaction handling",
-    "Advanced rules used by Monzo Today and Monzo Spending.",
+    "Advanced rules used by Monzo Today and every spending chart.",
     [
       {
         label: () =>
