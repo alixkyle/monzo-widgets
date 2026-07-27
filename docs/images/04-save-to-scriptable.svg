@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="390" viewBox="0 0 760 390">
+  <rect width="760" height="390" rx="28" fill="#f4f6f8"/>
+  <text x="46" y="66" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="26" font-weight="700">Save the installer here</text>
+  <rect x="46" y="91" width="668" height="245" rx="18" fill="#fff" stroke="#d8dee5" stroke-width="2"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,sans-serif">
+    <text x="78" y="137" fill="#536578" font-size="15">iCloud Drive</text>
+    <text x="78" y="183" fill="#8b98a6" font-size="22">›</text>
+    <text x="111" y="183" fill="#11263d" font-size="20" font-weight="650">Scriptable</text>
+    <line x1="78" y1="204" x2="682" y2="204" stroke="#e2e7ec"/>
+    <text x="78" y="242" fill="#536578" font-size="15">File name</text>
+    <rect x="78" y="255" width="604" height="48" rx="9" fill="#f8fafb" stroke="#b9c4cf"/>
+    <text x="94" y="285" fill="#11263d" font-size="18">Money Installer.js</text>
+  </g>
+</svg>

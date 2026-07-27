@@ -44,9 +44,22 @@ class RequestMock {
   }
 
   async loadJSON() {
-    assert.match(this.url, /\/summary\?dayStart=midnight$/);
     assert.equal(this.headers.Authorization, "Bearer test-widget-key");
-    return { currency: "GBP", spentToday: 0 };
+    if (this.url.endsWith("/summary?dayStart=midnight")) {
+      return {
+        currency: "GBP",
+        spentToday: 0,
+        balance: 10000,
+        transactions: [],
+      };
+    }
+    if (this.url.endsWith("/week?dayStart=midnight")) {
+      return { days: new Array(7).fill({ total: 0 }) };
+    }
+    if (this.url.endsWith("/pots")) {
+      return { pots: [] };
+    }
+    assert.fail(`Unexpected readiness-check URL: ${this.url}`);
   }
 
   async loadString() {

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="390" viewBox="0 0 760 390">
+  <rect width="760" height="390" rx="28" fill="#f4f6f8"/>
+  <rect x="36" y="30" width="688" height="330" rx="18" fill="#fff" stroke="#d8dee5" stroke-width="2"/>
+  <text x="70" y="78" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="26" font-weight="700">New OAuth Client</text>
+  <text x="70" y="118" fill="#536578" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="15">Name</text>
+  <rect x="70" y="130" width="620" height="45" rx="8" fill="#f8fafb" stroke="#b9c4cf"/>
+  <text x="86" y="159" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="17">Monzo Widgets</text>
+  <text x="70" y="207" fill="#536578" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="15">Confidentiality</text>
+  <rect x="70" y="219" width="620" height="45" rx="8" fill="#f8fafb" stroke="#b9c4cf"/>
+  <text x="86" y="248" fill="#11263d" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="17">Confidential</text>
+  <text x="70" y="296" fill="#536578" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="15">Redirect URL</text>
+  <rect x="70" y="308" width="620" height="38" rx="8" fill="#fff5e8" stroke="#f1bd76"/>
+  <text x="86" y="333" fill="#11263d" font-family="ui-monospace,SFMono-Regular,monospace" font-size="15">https://example.com/auth/callback</text>
+</svg>

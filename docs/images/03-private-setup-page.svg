@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430">
+  <rect width="760" height="430" rx="28" fill="#001e3a"/>
+  <rect x="44" y="35" width="32" height="5" rx="3" fill="#ff4f40"/>
+  <text x="44" y="82" fill="#f7f5f2" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="29" font-weight="750">Monzo Widgets</text>
+  <text x="44" y="111" fill="#b7c4d1" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="15">Complete these four steps in order.</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,sans-serif">
+    <rect x="44" y="137" width="672" height="61" rx="14" fill="#082b4b"/>
+    <circle cx="76" cy="167" r="17" fill="#ff4f40"/><text x="71" y="173" fill="#fff" font-size="17" font-weight="700">1</text>
+    <text x="105" y="173" fill="#f7f5f2" font-size="17" font-weight="700">Copy the Monzo return address</text>
+    <rect x="44" y="208" width="672" height="61" rx="14" fill="#082b4b"/>
+    <circle cx="76" cy="238" r="17" fill="#ff4f40"/><text x="71" y="244" fill="#fff" font-size="17" font-weight="700">2</text>
+    <text x="105" y="244" fill="#f7f5f2" font-size="17" font-weight="700">Save it in Monzo</text>
+    <rect x="44" y="279" width="672" height="61" rx="14" fill="#082b4b"/>
+    <circle cx="76" cy="309" r="17" fill="#ff4f40"/><text x="71" y="315" fill="#fff" font-size="17" font-weight="700">3</text>
+    <text x="105" y="315" fill="#f7f5f2" font-size="17" font-weight="700">Connect Monzo using the widget password</text>
+    <rect x="44" y="350" width="672" height="61" rx="14" fill="#082b4b"/>
+    <circle cx="76" cy="380" r="17" fill="#ff4f40"/><text x="71" y="386" fill="#fff" font-size="17" font-weight="700">4</text>
+    <text x="105" y="386" fill="#f7f5f2" font-size="17" font-weight="700">Install the iPhone widgets</text>
+  </g>
+</svg>

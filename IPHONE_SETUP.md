@@ -22,6 +22,7 @@ Keep all passwords and keys created below private.
 1. Open [developers.monzo.com](https://developers.monzo.com/) in Safari.
 2. Sign in with Monzo.
 3. Tap **New OAuth Client**.
+   Monzo uses “OAuth Client” to mean a private app connection.
 4. Enter these details:
 
    - **Name:** `Monzo Widgets`
@@ -35,7 +36,14 @@ Keep all passwords and keys created below private.
 The `example.com` address is temporary. Do not open it. You will replace it
 with the real address in Step 3.
 
-## Step 2: Deploy the widget service
+<details>
+<summary>Show what the Monzo form should contain</summary>
+
+![Monzo connection form showing the required values](docs/images/01-monzo-client.svg)
+
+</details>
+
+## Step 2: Create the private widget service
 
 Tap this button:
 
@@ -47,26 +55,41 @@ Then:
 2. Sign in to Cloudflare if asked.
 3. Allow Cloudflare to copy `monzo-widgets`.
 4. Keep the suggested names.
-5. Cloudflare will ask for three secret values. Enter:
+5. Cloudflare will ask for three private values. Enter:
 
    - **MONZO_CLIENT_ID:** the Client ID copied in Step 1
    - **MONZO_CLIENT_SECRET:** the Client Secret copied in Step 1
-   - **WIDGET_KEY:** create a new private password containing at least 20
-     characters
+   - **WIDGET_KEY:** a new private widget password
 
-6. Save the `WIDGET_KEY` in the Passwords app. You must use exactly the same
-   password again later.
-7. Finish the deployment and wait for Cloudflare to show that it succeeded.
-8. Open the new address ending in `.workers.dev`.
+6. For `WIDGET_KEY`, use Safari's suggested strong password if it appears.
+   Otherwise open the Passwords app, add an entry named `Monzo Widgets`, and
+   use a generated password containing at least 20 characters.
+7. Save the widget password. You must use exactly the same password later.
+8. Finish the deployment and wait for Cloudflare to show that it succeeded.
+9. Open the new address ending in `.workers.dev`.
 
 You should now see a page headed **Monzo Widgets**.
+
+<details>
+<summary>Show the three Cloudflare values</summary>
+
+![Cloudflare form showing the three private values](docs/images/02-cloudflare-secrets.svg)
+
+</details>
+
+<details>
+<summary>Show the Monzo Widgets setup page</summary>
+
+![The private Monzo Widgets setup page](docs/images/03-private-setup-page.svg)
+
+</details>
 
 ## Step 3: Add the real Monzo redirect address
 
 This step replaces the temporary `example.com` address.
 
-1. On the **Monzo Widgets** page, copy the address under
-   **MONZO REDIRECT URL**.
+1. On the **Monzo Widgets** page, tap **Copy** beside
+   **Copy the Monzo return address**.
 2. Check that the copied address ends in `/auth/callback`.
 3. Return to [developers.monzo.com](https://developers.monzo.com/).
 4. Open the `Monzo Widgets` client created in Step 1.
@@ -79,7 +102,7 @@ Do not continue until `example.com` has been replaced.
 ## Step 4: Connect your Monzo account
 
 1. Return to the Cloudflare address ending in `.workers.dev`.
-2. Enter the `WIDGET_KEY` saved in Step 2.
+2. Enter the widget password (`WIDGET_KEY`) saved in Step 2.
 3. Tap **Connect Monzo**.
 4. Open the sign-in link Monzo sends by email.
 5. Open the Monzo app when asked.
@@ -104,6 +127,13 @@ The browser should confirm that Monzo is connected.
     Step 2.
 11. Tap **Verify and install**.
 
+<details>
+<summary>Show where to save Money Installer</summary>
+
+![Save Money Installer in the Scriptable iCloud folder](docs/images/04-save-to-scriptable.svg)
+
+</details>
+
 The installer will add:
 
 - `Money App`
@@ -111,6 +141,9 @@ The installer will add:
 - `Money — bills & savings`
 - `Money — pots`
 - `Money Settings`
+
+It also checks the Monzo connection, balance, weekly spending, pots, installed
+scripts, and saved settings. Continue when it says **Everything is ready**.
 
 Run **Money Settings** if you want to review the recommended defaults.
 

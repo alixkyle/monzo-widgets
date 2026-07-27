@@ -30,9 +30,9 @@ export default {
     try {
       switch (url.pathname) {
         case "/":
-          return handleHome(url);
+          return await handleHome(url, env);
         case "/auth":
-          return handleAuthStart(request, url, env);
+          return await handleAuthStart(request, url, env);
         case "/auth/callback":
           return await handleAuthCallback(url, env);
         case "/summary":
@@ -59,10 +59,12 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function handleHome(url: URL): Response {
+async function handleHome(url: URL, env: Env): Promise<Response> {
   const callback = `${url.origin}/auth/callback`;
   const installer =
-    "https://github.com/alixkyle/monzo-widgets/blob/main/widget/money-installer.js";
+    "https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js";
+  const connected = Boolean(await env.MONZO.get("refresh_token"));
+  const nonce = crypto.randomUUID().replaceAll("-", "");
 
   return new Response(
     `<!doctype html>
@@ -78,39 +80,73 @@ function handleHome(url: URL): Response {
     .mark { width: 2rem; height: .25rem; background: #ff4f40; border-radius: 1rem; }
     h1 { font-size: 2rem; margin: 1rem 0 .5rem; }
     p { color: #b7c4d1; line-height: 1.5; }
-    section { margin-top: 1.5rem; padding: 1rem; background: #082b4b; border-radius: 1rem; }
+    .status { margin-top: 1.25rem; padding: .8rem 1rem; border-radius: .8rem; background: ${connected ? "#164c3d" : "#173d60"}; color: #f7f5f2; }
+    .step { margin-top: 1rem; padding: 1rem; background: #082b4b; border-radius: 1rem; }
+    .step-number { display: inline-grid; place-items: center; width: 1.7rem; height: 1.7rem; margin-right: .45rem; border-radius: 50%; background: #ff4f40; color: white; font-weight: 800; }
+    h2 { display: inline; font-size: 1.05rem; }
     label { display: block; font-size: .8rem; font-weight: 700; color: #8fa3b8; margin-bottom: .5rem; }
-    code { display: block; overflow-wrap: anywhere; color: #f7f5f2; }
+    .copy-row { display: flex; gap: .5rem; margin-top: .75rem; }
     input, button, a.button { box-sizing: border-box; width: 100%; border: 0; border-radius: .7rem; padding: .9rem; font: inherit; }
-    input { margin-bottom: .75rem; background: #f7f5f2; color: #001e3a; }
+    input { background: #f7f5f2; color: #001e3a; }
+    .copy-row input { min-width: 0; font-size: .78rem; }
+    .copy-row button { width: auto; white-space: nowrap; }
+    form input { margin-bottom: .75rem; }
     button, a.button { display: block; background: #ff4f40; color: white; font-weight: 700; text-align: center; text-decoration: none; }
+    button.copied { background: #4bb78f; }
     a { color: #69d2ae; }
+    small { display: block; color: #8fa3b8; line-height: 1.45; margin-top: .65rem; }
   </style>
 </head>
 <body>
 <main>
   <div class="mark"></div>
   <h1>Monzo Widgets</h1>
-  <p>Your private Worker is running. Finish connecting Monzo, then install the iPhone widgets.</p>
+  <p>Your private widget service is running. Complete these four steps in order.</p>
+  <div class="status">${connected ? "✓ Monzo is connected" : "Monzo is not connected yet"}</div>
 
-  <section>
-    <label>MONZO REDIRECT URL</label>
-    <code>${callback}</code>
-    <p>Paste this into the redirect URL field for your confidential client at <a href="https://developers.monzo.com/">developers.monzo.com</a>.</p>
+  <section class="step">
+    <span class="step-number">1</span><h2>Copy the Monzo return address</h2>
+    <div class="copy-row">
+      <input id="return-address" value="${callback}" readonly>
+      <button type="button" data-copy="return-address">Copy</button>
+    </div>
+    <small>This is called the Redirect URL in Monzo.</small>
   </section>
 
-  <section>
-    <form action="/auth" method="get">
-      <label for="key">WIDGET KEY</label>
-      <input id="key" name="key" type="password" autocomplete="current-password" required>
+  <section class="step">
+    <span class="step-number">2</span><h2>Save it in Monzo</h2>
+    <p>Open your <a href="https://developers.monzo.com/">Monzo developer page</a>, replace the temporary <strong>example.com</strong> Redirect URL, then save.</p>
+  </section>
+
+  <section class="step">
+    <span class="step-number">3</span><h2>Connect Monzo</h2>
+    <form action="/auth" method="post">
+      <label for="key">WIDGET PASSWORD</label>
+      <input id="key" name="key" type="password" autocomplete="current-password" required placeholder="The WIDGET_KEY saved during deployment">
       <button type="submit">Connect Monzo</button>
     </form>
   </section>
 
-  <section>
-    <p>After Monzo is connected, install Scriptable and add the one-run installer.</p>
+  <section class="step">
+    <span class="step-number">4</span><h2>Install the iPhone widgets</h2>
+    <p>After Monzo is connected, open the installer and save it to Scriptable.</p>
     <a class="button" href="${installer}">Open iPhone installer</a>
   </section>
+  <script nonce="${nonce}">
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const input = document.getElementById(button.dataset.copy);
+        try {
+          await navigator.clipboard.writeText(input.value);
+        } catch {
+          input.select();
+          document.execCommand("copy");
+        }
+        button.textContent = "Copied";
+        button.classList.add("copied");
+      });
+    });
+  </script>
 </main>
 </body>
 </html>`,
@@ -118,7 +154,7 @@ function handleHome(url: URL): Response {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Content-Security-Policy":
-          "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+          `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`,
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
       },
@@ -155,15 +191,30 @@ function authorised(request: Request, url: URL, env: Env): boolean {
   return safeEqual(key, env.WIDGET_KEY);
 }
 
-function handleAuthStart(request: Request, url: URL, env: Env): Response {
-  if (!authorised(request, url, env)) return json({ error: "Unauthorised" }, 401);
+async function handleAuthStart(
+  request: Request,
+  url: URL,
+  env: Env
+): Promise<Response> {
+  let key = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+  if (!key && request.method === "POST") {
+    const form = await request.formData();
+    const submitted = form.get("key");
+    if (typeof submitted === "string") key = submitted;
+  }
+  key ||= url.searchParams.get("key") ?? undefined;
+  if (!key || !env.WIDGET_KEY || !safeEqual(key, env.WIDGET_KEY)) {
+    return json({ error: "Incorrect widget password" }, 401);
+  }
 
   const redirectUri = `${url.origin}/auth/callback`;
+  const state = crypto.randomUUID();
+  await env.MONZO.put("oauth_state", state, { expirationTtl: 600 });
   const authUrl = new URL("https://auth.monzo.com/");
   authUrl.searchParams.set("client_id", env.MONZO_CLIENT_ID);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("state", env.WIDGET_KEY);
+  authUrl.searchParams.set("state", state);
 
   return Response.redirect(authUrl.toString(), 302);
 }
@@ -172,7 +223,11 @@ async function handleAuthCallback(url: URL, env: Env): Promise<Response> {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
 
-  if (state !== env.WIDGET_KEY) return json({ error: "Bad state" }, 400);
+  const expectedState = await env.MONZO.get("oauth_state");
+  if (!state || !expectedState || !safeEqual(state, expectedState)) {
+    return json({ error: "This connection link expired. Return to the Monzo Widgets page and try again." }, 400);
+  }
+  await env.MONZO.delete("oauth_state");
   if (!code) return json({ error: "Missing code" }, 400);
 
   const res = await fetch("https://api.monzo.com/oauth2/token", {
@@ -211,10 +266,39 @@ async function handleAuthCallback(url: URL, env: Env): Promise<Response> {
     expirationTtl: Math.max(60, token.expires_in - 60),
   });
 
-  return new Response(
-    "Connected. Now approve access in your Monzo app, then load /summary.",
-    { headers: { "Content-Type": "text/plain" } }
-  );
+  return new Response(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monzo connected</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { margin: 0; background: #001e3a; color: #f7f5f2; }
+    main { max-width: 32rem; margin: auto; padding: 3rem 1.25rem; text-align: center; }
+    .tick { display: grid; place-items: center; width: 4rem; height: 4rem; margin: auto; border-radius: 50%; background: #4bb78f; font-size: 2rem; }
+    p { color: #b7c4d1; line-height: 1.5; }
+    a { display: block; margin-top: 1rem; padding: .9rem; border-radius: .7rem; background: #ff4f40; color: white; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="tick">✓</div>
+  <h1>Monzo is connected</h1>
+  <p>Approve the access request in the Monzo app, then continue with the iPhone installer.</p>
+  <a href="https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js">Open iPhone installer</a>
+  <a href="${url.origin}">Return to setup</a>
+</main>
+</body>
+</html>`, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy":
+        "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 const DAYS = 7;

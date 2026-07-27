@@ -23,6 +23,38 @@ async function showError(message) {
   await alert.presentAlert();
 }
 
+async function checkWorker(workerUrl, widgetKey) {
+  const checks = [
+    {
+      name: "Monzo balance",
+      path: "/summary?dayStart=midnight",
+      valid: (data) =>
+        typeof data.balance === "number" && Array.isArray(data.transactions),
+    },
+    {
+      name: "Weekly spending",
+      path: "/week?dayStart=midnight",
+      valid: (data) => Array.isArray(data.days) && data.days.length === 7,
+    },
+    {
+      name: "Pots",
+      path: "/pots",
+      valid: (data) => Array.isArray(data.pots),
+    },
+  ];
+
+  for (const check of checks) {
+    const request = new Request(`${workerUrl}${check.path}`);
+    request.headers = { Authorization: `Bearer ${widgetKey}` };
+    request.timeoutInterval = 20;
+    const response = await request.loadJSON();
+    if (response.error) throw new Error(`${check.name}: ${response.error}`);
+    if (!check.valid(response)) {
+      throw new Error(`${check.name}: the response was incomplete`);
+    }
+  }
+}
+
 async function install() {
 const connection = new Alert();
 connection.title = "Install Monzo Widgets";
@@ -49,14 +81,10 @@ if (!/^https:\/\/[^/]+\.workers\.dev$/i.test(workerUrl) || !widgetKey) {
 }
 
 try {
-  const check = new Request(`${workerUrl}/summary?dayStart=midnight`);
-  check.headers = { Authorization: `Bearer ${widgetKey}` };
-  check.timeoutInterval = 20;
-  const response = await check.loadJSON();
-  if (response.error) throw new Error(response.error);
+  await checkWorker(workerUrl, widgetKey);
 } catch (error) {
   await showError(
-    `The Worker connection could not be verified.\n\n${String(error)}`
+    `The private widget service could not be verified.\n\n${String(error)}`
   );
   return;
 }
@@ -110,10 +138,24 @@ try {
   };
   fm.writeString(settingsPath, JSON.stringify(settings, null, 2));
 
+  for (const [, destination] of FILES) {
+    const installedPath = fm.joinPath(directory, destination);
+    if (!fm.fileExists(installedPath)) {
+      throw new Error(`${destination} was not installed`);
+    }
+  }
+  const savedSettings = JSON.parse(fm.readString(settingsPath));
+  if (
+    savedSettings.workerUrl !== workerUrl ||
+    savedSettings.widgetKey !== widgetKey
+  ) {
+    throw new Error("The connection settings were not saved correctly");
+  }
+
   const done = new Alert();
-  done.title = "Monzo Widgets installed";
+  done.title = "Everything is ready";
   done.message =
-    "Run Money Settings to review your choices, then add the four widgets from the Home Screen.";
+    "Monzo, weekly spending, pots, all five scripts, and your settings passed the checks.\n\nYou can now add the widgets to the Home Screen.";
   done.addAction("Done");
   await done.presentAlert();
 } catch (error) {
