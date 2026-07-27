@@ -80,6 +80,13 @@ Two things close that gap:
   so it lands at the root of each user's copy. Once a day it pulls the current
   `worker/` directory from this repository and commits any change, which makes
   Cloudflare redeploy. Users can also run it on demand from the Actions tab.
+- **The Worker's own setup page hands the workflow out**, because we cannot
+  rely on the Deploy button being permitted to create `.github/workflows/` in
+  a fresh repository. Step 5 of `/` shows the file as copyable text with the
+  path to save it at, so a user whose copy did not receive it can add it in a
+  couple of taps. The page also reads the newest `WORKER_VERSION` straight
+  from this repository and says plainly whether that Worker is behind, which
+  works whether or not the workflow ever ran.
 - **`GET /version`** reports the Worker's API level, unauthenticated. The
   installer checks it before doing anything and, if the Worker is behind, says
   so and explains how to sync — rather than failing with a 404 from a route

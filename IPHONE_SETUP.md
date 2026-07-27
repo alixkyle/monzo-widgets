@@ -157,6 +157,27 @@ spending, pots, installed scripts, and saved settings. Continue when it says
 
 Run **Monzo Settings** if you want to review the recommended defaults.
 
+## Step 5b: Turn on automatic updates
+
+Do this once. It keeps your widget service current, so future widgets always
+have something that understands them.
+
+1. Return to your `.workers.dev` page.
+2. Scroll to **Turn on automatic updates**.
+3. If it already says **✓ Up to date** and you have done this before, skip the
+   rest.
+4. Tap **Copy the auto-update file**.
+5. Open your copy of `monzo-widgets` on [github.com](https://github.com) — it
+   has the same name as this project and sits under your own account.
+6. Tap **Add file**, then **Create new file**.
+7. For the name, type exactly:
+   `.github/workflows/sync-upstream.yml`
+8. Paste into the large box, then tap **Commit changes**.
+9. Open the **Actions** tab. If a green button offers to enable workflows, tap
+   it.
+
+Your service now updates itself once a day.
+
 ## Step 6: Put the widgets on the Home Screen
 
 Add each widget separately:
@@ -237,10 +258,14 @@ scripts without touching your Worker connection or preferences. If you
 previously used the older `Money…` script names, edit each Home Screen widget
 once and select its new `Monzo…` name.
 
-**Your private widget service.** This updates itself. When you deployed it,
-GitHub made your own copy of the project, and a scheduled job in that copy
-checks once a day for new code and applies it. Cloudflare notices the change
-and redeploys automatically, so normally there is nothing to do.
+**Your private widget service.** Once **Step 5** on your `.workers.dev` page is
+done, this updates itself daily and there is normally nothing to do.
+
+Open your `.workers.dev` address any time to see where it stands. Step 5 shows
+one of:
+
+- **✓ Up to date** — nothing to do
+- **Update available** — follow the rest of this section
 
 To pull an update immediately instead of waiting for the daily check:
 
@@ -251,16 +276,12 @@ To pull an update immediately instead of waiting for the daily check:
 5. Wait a couple of minutes for Cloudflare to redeploy.
 
 If **Actions** shows a button offering to enable workflows, tap it once. GitHub
-turns scheduled jobs off in new copies until you approve them, and also pauses
-them again after 60 days with no activity — the same button brings them back.
+turns scheduled jobs off in new copies until you approve them, and pauses them
+again after 60 days with no activity — the same button brings them back.
 
-### Checking which version your service is on
-
-Open your `.workers.dev` address with `/version` on the end, for example
-`https://monzo-widgets.yourname.workers.dev/version`. No password is needed.
-
-- `{"service":"monzo-widgets","version":2}` — up to date
-- `{"error":"Not found"}` — out of date; run the sync above
+**If there is no "Sync worker from upstream" in the Actions list**, the file
+never made it into your copy. Go back to Step 5 on your `.workers.dev` page and
+add it, then this section will work from then on.
 
 If a widget shows **"Your widget service needs updating"**, or the installer
 stops with **"Update your widget service"**, this is what they mean: the phone
