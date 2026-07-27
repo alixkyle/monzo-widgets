@@ -8,11 +8,19 @@ const RAW_BASE =
   "https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget";
 
 const FILES = [
-  ["money-widget.js", "Money App.js"],
-  ["money-week.js", "Money Week.js"],
-  ["money-bills-savings.js", "Money — bills & savings.js"],
-  ["money-pots.js", "Money — pots.js"],
-  ["money-settings.js", "Money Settings.js"],
+  ["money-widget.js", "Monzo Today.js"],
+  ["money-week.js", "Monzo Spending.js"],
+  ["money-bills-savings.js", "Monzo Bills & Savings.js"],
+  ["money-pots.js", "Monzo Balances & Pots.js"],
+  ["money-settings.js", "Monzo Settings.js"],
+];
+
+const LEGACY_FILES = [
+  "Money App.js",
+  "Money Week.js",
+  "Money — bills & savings.js",
+  "Money — pots.js",
+  "Money Settings.js",
 ];
 
 async function showError(message) {
@@ -95,7 +103,7 @@ try {
     const request = new Request(`${RAW_BASE}/${source}`);
     request.timeoutInterval = 20;
     const code = await request.loadString();
-    if (!code.includes("Money App") && !code.includes("Money Settings")) {
+    if (!code.includes("Monzo")) {
       throw new Error(`Unexpected download for ${source}`);
     }
     downloaded.push([destination, code]);
@@ -106,6 +114,12 @@ try {
 
   for (const [destination, code] of downloaded) {
     fm.writeString(fm.joinPath(directory, destination), code);
+  }
+
+  // Remove the old script names only after their replacements have been saved.
+  for (const legacyName of LEGACY_FILES) {
+    const legacyPath = fm.joinPath(directory, legacyName);
+    if (fm.fileExists(legacyPath)) fm.remove(legacyPath);
   }
 
   const settingsPath = fm.joinPath(directory, "money-app-settings.json");
@@ -155,7 +169,7 @@ try {
   const done = new Alert();
   done.title = "Everything is ready";
   done.message =
-    "Monzo, weekly spending, pots, all five scripts, and your settings passed the checks.\n\nYou can now add the widgets to the Home Screen.";
+    "Monzo, weekly spending, pots, all five scripts, and your settings passed the checks.\n\nYou can now add the widgets to the Home Screen. If you used the older Money script names, reselect each widget's new Monzo script once.";
   done.addAction("Done");
   await done.presentAlert();
 } catch (error) {

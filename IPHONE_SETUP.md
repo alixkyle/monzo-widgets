@@ -114,13 +114,13 @@ The browser should confirm that Monzo is connected.
 
 1. Open Scriptable once, then return to Safari. This creates its iCloud folder.
 2. Open the
-   [Money Installer file](https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js).
+   [Monzo Installer file](https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js).
 3. Tap Safari's **Share** button.
 4. Tap **Save to Files**.
 5. Choose **iCloud Drive → Scriptable**.
-6. Save the file as `Money Installer.js`.
+6. Save the file as `Monzo Installer.js`.
 7. Open Scriptable.
-8. Open **Money Installer** and tap the triangular Run button.
+8. Open **Monzo Installer** and tap the triangular Run button.
 9. When asked for the **Worker URL**, enter the Cloudflare address ending in
    `.workers.dev`. Do not add `/auth/callback`.
 10. When asked for the **Widget key**, enter the same `WIDGET_KEY` saved in
@@ -128,24 +128,24 @@ The browser should confirm that Monzo is connected.
 11. Tap **Verify and install**.
 
 <details>
-<summary>Show where to save Money Installer</summary>
+<summary>Show where to save Monzo Installer</summary>
 
-![Save Money Installer in the Scriptable iCloud folder](docs/images/04-save-to-scriptable.svg)
+![Save Monzo Installer in the Scriptable iCloud folder](docs/images/04-save-to-scriptable.svg)
 
 </details>
 
 The installer will add:
 
-- `Money App`
-- `Money Week`
-- `Money — bills & savings`
-- `Money — pots`
-- `Money Settings`
+- `Monzo Today`
+- `Monzo Spending`
+- `Monzo Bills & Savings`
+- `Monzo Balances & Pots`
+- `Monzo Settings`
 
 It also checks the Monzo connection, balance, weekly spending, pots, installed
 scripts, and saved settings. Continue when it says **Everything is ready**.
 
-Run **Money Settings** if you want to review the recommended defaults.
+Run **Monzo Settings** if you want to review the recommended defaults.
 
 ## Step 6: Put the widgets on the Home Screen
 
@@ -163,28 +163,46 @@ Recommended sizes:
 
 | Script | Size |
 | --- | --- |
-| `Money App` | Small or medium |
-| `Money Week` | Medium |
-| `Money — bills & savings` | Medium |
-| `Money — pots` | Small |
+| `Monzo Today` | Small or medium |
+| `Monzo Spending` | Medium |
+| `Monzo Bills & Savings` | Medium |
+| `Monzo Balances & Pots` | Small |
 
 Setup is complete.
 
+### Swipe through four weeks
+
+You can stack four copies of the same weekly widget and swipe between them:
+
+1. Add four **medium** Scriptable widgets.
+2. Edit each widget and choose `Monzo Spending`.
+3. In **Parameter**, enter `0` on the first, `1` on the second, `2` on the
+   third, and `3` on the fourth.
+4. Long-press the Home Screen, then drag the four widgets on top of one another
+   to make a widget stack.
+5. Swipe up or down on the stack to move through the weeks.
+
+`0` is the current seven-day period, `1` is the previous period, and so on.
+Keep them ordered `0`, `1`, `2`, `3` in the stack. You can repeat the same
+steps with `Monzo Bills & Savings`.
+
 ## Change the settings later
 
-Open Scriptable and run **Money Settings**. The options are grouped into:
+Open Scriptable and run **Monzo Settings**. The options are grouped into:
 
-- **Money App & Money Week**
+- **Today & Spending**
 - **Balances & Pots**
 - **Advanced transaction handling**
 
-Money App and Money Week use the same spending rules, so today's headline
+Monzo Today and Monzo Spending use the same spending rules, so today's headline
 matches today's bar.
 
 ## Install updates later
 
-Run **Money Installer** again. It updates the scripts without removing the
-Worker connection or widget preferences.
+Run **Monzo Installer** again. It updates the scripts without removing the
+Worker connection or widget preferences. If you previously used the older
+`Money…` script names, edit each existing Home Screen widget once and select
+its new `Monzo…` name.
 
 ## If something goes wrong
 
@@ -203,7 +221,7 @@ created in Step 2.
 
 Open the Monzo app and approve the developer access request.
 
-**Money Installer cannot verify the connection**
+**Monzo Installer cannot verify the connection**
 
 Check that:
 

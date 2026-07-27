@@ -27,12 +27,12 @@ in one always-on place avoids that; the widget just fetches plain JSON.
 | ------------------------- | --------------------------------------------- |
 | `worker/src/index.ts`     | HTTP routes: `/auth`, `/auth/callback`, `/summary` |
 | `worker/src/monzo.ts`     | Monzo client and token refresh                |
-| `widget/money-widget.js`  | The Scriptable widget                         |
-| `widget/money-pots.js`    | Small total balance and pots widget           |
-| `widget/money-week.js`    | Weekly Card, Transfers, and Flex chart        |
-| `widget/money-bills-savings.js` | Weekly Bills and Savings chart         |
-| `widget/money-settings.js` | Shared connection and widget preferences     |
-| `widget/money-installer.js` | One-run iPhone installer                     |
+| `widget/money-widget.js`  | Monzo Today widget                            |
+| `widget/money-pots.js`    | Monzo Balances & Pots widget                  |
+| `widget/money-week.js`    | Monzo Spending weekly chart                   |
+| `widget/money-bills-savings.js` | Monzo Bills & Savings weekly chart     |
+| `widget/money-settings.js` | Monzo Settings                               |
+| `widget/money-installer.js` | Monzo Installer                              |
 
 ## What `/summary` returns
 

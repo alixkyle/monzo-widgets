@@ -1,6 +1,6 @@
-// Money App — weekly bills and savings chart (Scriptable)
+// Monzo Bills & Savings — weekly bills and savings chart (Scriptable)
 //
-// Copy this into a new Scriptable script, then add it beneath Money — week.
+// Copy this into a new Scriptable script, then add it beneath Monzo Spending.
 
 const WORKER_URL = "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev";
 const WIDGET_KEY = "PASTE_YOUR_WIDGET_KEY";
@@ -184,7 +184,7 @@ function buildWidget(data) {
 function errorWidget(message) {
   const w = new ListWidget();
   w.backgroundColor = COLORS.bg;
-  const title = w.addText("Money — bills & savings");
+  const title = w.addText("Monzo Bills & Savings");
   title.font = Font.heavySystemFont(14);
   title.textColor = COLORS.card;
   w.addSpacer(4);

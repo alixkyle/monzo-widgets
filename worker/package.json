@@ -18,7 +18,7 @@
         "description": "Client secret from your confidential client at developers.monzo.com."
       },
       "WIDGET_KEY": {
-        "description": "Choose a long private password. You will enter the same value in Money Settings on your iPhone."
+        "description": "Choose a long private password. You will enter the same value in Monzo Settings on your iPhone."
       },
       "MONZO": {
         "description": "Private storage for your rotating Monzo tokens. Cloudflare creates this automatically."

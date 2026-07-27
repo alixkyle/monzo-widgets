@@ -1,4 +1,4 @@
-// Money App — shared widget settings (Scriptable)
+// Monzo Settings — shared widget settings (Scriptable)
 //
 // Run this script inside Scriptable whenever you want to change how the
 // widgets calculate and display your money.
@@ -49,7 +49,7 @@ function cycle(current, values) {
 
 async function configureConnection(settings) {
   const alert = new Alert();
-  alert.title = "Connect Money App";
+  alert.title = "Connect Monzo Widgets";
   alert.message = "Enter the values from your Cloudflare Worker setup.";
   alert.addTextField(
     "Worker URL",
@@ -89,18 +89,18 @@ async function presentOptions(title, message, actions) {
 async function spendingSettings() {
   await presentOptions(
     "Spending widgets",
-    "These settings keep Money App and Money Week aligned. Bills and Savings also affect the separate chart.",
+    "These settings keep Monzo Today and Monzo Spending aligned. Bills and Savings also affect the separate chart.",
     [
       {
         label: () =>
-          `Bills in Money Week: ${
+          `Bills in Monzo Spending: ${
             settings.excludeBills ? "Excluded" : "Included"
           }`,
         run: () => (settings.excludeBills = !settings.excludeBills),
       },
       {
         label: () =>
-          `Savings in Money Week: ${
+          `Savings in Monzo Spending: ${
             settings.excludeSavings ? "Excluded" : "Included"
           }`,
         run: () => (settings.excludeSavings = !settings.excludeSavings),
@@ -158,7 +158,7 @@ async function balanceSettings() {
 async function transactionSettings() {
   await presentOptions(
     "Transaction handling",
-    "Advanced rules used by Money App and Money Week.",
+    "Advanced rules used by Monzo Today and Monzo Spending.",
     [
       {
         label: () =>
@@ -241,10 +241,10 @@ async function resetSettings() {
 
 while (true) {
   const alert = new Alert();
-  alert.title = "Money Settings";
+  alert.title = "Monzo Settings";
   alert.message = "Choose the part of your widgets you want to change.";
   alert.addAction("Connection");
-  alert.addAction("Money App & Money Week");
+  alert.addAction("Today & Spending");
   alert.addAction("Balances & Pots");
   alert.addAction("Advanced transaction handling");
   alert.addDestructiveAction("Reset preferences");

@@ -6,6 +6,15 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const writes = new Map();
+for (const filename of [
+  "Money App.js",
+  "Money Week.js",
+  "Money — bills & savings.js",
+  "Money — pots.js",
+  "Money Settings.js",
+]) {
+  writes.set(`/icloud/${filename}`, "legacy");
+}
 
 class AlertMock {
   constructor() {
@@ -75,6 +84,7 @@ const fileManager = {
   async downloadFileFromiCloud() {},
   readString: (filename) => writes.get(filename),
   writeString: (filename, contents) => writes.set(filename, contents),
+  remove: (filename) => writes.delete(filename),
 };
 
 const context = vm.createContext({
@@ -100,13 +110,23 @@ await module.link(() => {
 await module.evaluate();
 
 for (const filename of [
+  "Monzo Today.js",
+  "Monzo Spending.js",
+  "Monzo Bills & Savings.js",
+  "Monzo Balances & Pots.js",
+  "Monzo Settings.js",
+]) {
+  assert.ok(writes.has(`/icloud/${filename}`), `${filename} was not installed`);
+}
+
+for (const filename of [
   "Money App.js",
   "Money Week.js",
   "Money — bills & savings.js",
   "Money — pots.js",
   "Money Settings.js",
 ]) {
-  assert.ok(writes.has(`/icloud/${filename}`), `${filename} was not installed`);
+  assert.ok(!writes.has(`/icloud/${filename}`), `${filename} was not removed`);
 }
 
 const settings = JSON.parse(writes.get("/icloud/money-app-settings.json"));

@@ -1,6 +1,6 @@
-// Money App — weekly spending chart (Scriptable)
+// Monzo Spending — weekly spending chart (Scriptable)
 //
-// A second widget alongside "Money App". Shows the last 7 days as stacked
+// A second widget alongside "Monzo Today". Shows the last 7 days as stacked
 // bars: card spending, transfers to people, then Flex.
 // See SETUP.md for the walkthrough.
 
@@ -234,7 +234,7 @@ function buildWidget(data) {
 function errorWidget(message) {
   const w = new ListWidget();
   w.backgroundColor = COLORS.bg;
-  const t = w.addText("Money — week");
+  const t = w.addText("Monzo Spending");
   t.font = Font.heavySystemFont(14);
   t.textColor = COLORS.card;
   w.addSpacer(4);

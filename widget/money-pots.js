@@ -1,4 +1,4 @@
-// Money App — total balance and Monzo pots (Scriptable)
+// Monzo Balances & Pots — total balance and Monzo pots (Scriptable)
 // Designed for a small iOS home-screen widget.
 
 const WORKER_URL = "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev";
@@ -138,7 +138,7 @@ function buildWidget(data) {
 function errorWidget(message) {
   const w = new ListWidget();
   w.backgroundColor = COLORS.bg;
-  const title = w.addText("Money — pots");
+  const title = w.addText("Monzo Balances & Pots");
   title.font = Font.heavySystemFont(14);
   title.textColor = COLORS.coral;
   w.addSpacer(4);

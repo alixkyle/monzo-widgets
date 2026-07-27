@@ -1,4 +1,4 @@
-// Money App — iOS home screen widget (Scriptable)
+// Monzo Today — iOS home screen widget (Scriptable)
 //
 // Setup: copy this file into Scriptable on your iPhone, fill in the two values
 // below, then add a Scriptable widget to your home screen and pick this script.
@@ -75,7 +75,7 @@ async function fetchMoneyData() {
     `outgoingTransfers=${encodeURIComponent(SETTINGS.outgoingTransfers)}`,
   ].join("&");
 
-  // Use Money Week as the single source of truth for today's spending total.
+  // Use Monzo Spending as the single source of truth for today's spending total.
   const week = await loadJSON(`${workerUrl}/week?${weekQuery}`, widgetKey);
   const summary = await loadJSON(
     `${workerUrl}/summary?dayStart=${encodeURIComponent(SETTINGS.dayStart)}`,
@@ -186,7 +186,7 @@ function buildWidget(data) {
 function errorWidget(message) {
   const w = new ListWidget();
   w.backgroundColor = COLORS.bg;
-  const t = w.addText("Money App");
+  const t = w.addText("Monzo Today");
   t.font = Font.heavySystemFont(14);
   t.textColor = COLORS.coral;
   w.addSpacer(4);

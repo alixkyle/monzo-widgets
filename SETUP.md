@@ -76,13 +76,13 @@ You should see JSON with `spentToday`, `balance`, and today's `transactions`.
 
    | Scriptable name | Source file | Size |
    | --- | --- | --- |
-   | `Money Settings` | [widget/money-settings.js](widget/money-settings.js) | Run in app |
-   | `Money App` | [widget/money-widget.js](widget/money-widget.js) | Any |
-   | `Money Week` | [widget/money-week.js](widget/money-week.js) | Medium |
-   | `Money — bills & savings` | [widget/money-bills-savings.js](widget/money-bills-savings.js) | Medium |
-   | `Money — pots` | [widget/money-pots.js](widget/money-pots.js) | Small |
+   | `Monzo Settings` | [widget/money-settings.js](widget/money-settings.js) | Run in app |
+   | `Monzo Today` | [widget/money-widget.js](widget/money-widget.js) | Any |
+   | `Monzo Spending` | [widget/money-week.js](widget/money-week.js) | Medium |
+   | `Monzo Bills & Savings` | [widget/money-bills-savings.js](widget/money-bills-savings.js) | Medium |
+   | `Monzo Balances & Pots` | [widget/money-pots.js](widget/money-pots.js) | Small |
 
-3. Run `Money Settings` and enter the Worker URL and `WIDGET_KEY` once.
+3. Run `Monzo Settings` and enter the Worker URL and `WIDGET_KEY` once.
 4. Choose your category, Flex, day-boundary, total-balance, and pot options.
 5. Run each widget once inside Scriptable to check it renders.
 6. Long-press your home screen → **+** → **Scriptable** → pick a size →
@@ -110,6 +110,6 @@ out of `spentToday` to avoid double-counting flexed purchases.
 **Widget looks stale** — iOS decides refresh timing, typically every 5–15
 minutes. Tapping the widget forces a refresh.
 
-**Settings are not applying** — run `Money Settings` once and tap **Done**,
+**Settings are not applying** — run `Monzo Settings` once and tap **Done**,
 then run the affected widget inside Scriptable. The shared settings file lives
 in Scriptable's iCloud folder and is read by every widget.
