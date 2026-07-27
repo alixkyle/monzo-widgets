@@ -56,6 +56,8 @@ export default {
           return await handlePots(request, url, env);
         case "/accounts":
           return await handleAccounts(request, url, env);
+        case "/version":
+          return handleVersion();
         case "/diagnose":
           return await handleDiagnose(request, url, env);
         default:
@@ -72,6 +74,36 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+/**
+ * Bump this whenever the widgets start needing something older Workers do not
+ * serve. Each user runs their own copy of this Worker and updates it on their
+ * own schedule, so a widget can easily be newer than the Worker it is talking
+ * to. Without a version to compare, that shows up as a bare 404 from a route
+ * that simply did not exist yet, which tells the user nothing.
+ *
+ *   1  the original /summary, /week and /pots widgets
+ *   2  adds /weeks, plus category breakdowns on /week
+ */
+const WORKER_VERSION = 2;
+
+/**
+ * Deliberately unauthenticated: the installer needs to tell "your Worker is
+ * old" apart from "your widget key is wrong", and it cannot do that if the
+ * version check is itself behind the key. Nothing here is private — the
+ * landing page already identifies this as a Monzo Widgets Worker.
+ */
+function handleVersion(): Response {
+  return new Response(
+    JSON.stringify({ service: "monzo-widgets", version: WORKER_VERSION }),
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    }
+  );
 }
 
 const INSTALLER_URL =

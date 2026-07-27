@@ -33,6 +33,50 @@ async function showError(message) {
   await alert.presentAlert();
 }
 
+// The lowest /version these widgets can work against. Raise it in step with
+// WORKER_VERSION in the Worker whenever the widgets start relying on a route
+// or a field that older deployments do not have.
+const REQUIRED_WORKER_VERSION = 2;
+
+/**
+ * Everyone runs their own copy of the Worker and updates it on their own
+ * schedule, so the widgets are often newer than the service they are calling.
+ * Checking the version first turns that into one clear instruction, instead of
+ * a 404 from a route that simply did not exist yet.
+ *
+ * Workers older than /version itself answer 404 here, which is the strongest
+ * possible signal that an update is needed.
+ */
+async function checkWorkerVersion(workerUrl) {
+  let version = 0;
+  try {
+    const request = new Request(`${workerUrl}/version`);
+    request.timeoutInterval = 20;
+    const response = await request.loadJSON();
+    if (response && response.service === "monzo-widgets") {
+      version = Number(response.version) || 0;
+    }
+  } catch {
+    // Unreachable or not JSON: fall through to the out-of-date message, which
+    // is the likeliest cause and does no harm if the URL is simply wrong.
+    version = 0;
+  }
+
+  if (version < REQUIRED_WORKER_VERSION) {
+    throw new Error(
+      "Your private widget service is out of date, so the new widgets have " +
+        "nothing to talk to yet.\n\n" +
+        "To update it:\n" +
+        "1. Open your copy of monzo-widgets on github.com\n" +
+        "2. Tap Actions, then 'Sync worker from upstream'\n" +
+        "3. Tap 'Run workflow'\n" +
+        "4. Wait about two minutes, then run this installer again\n\n" +
+        "It also updates itself once a day, so you can leave it until " +
+        "tomorrow instead."
+    );
+  }
+}
+
 async function checkWorker(workerUrl, widgetKey) {
   const checks = [
     {
@@ -120,6 +164,20 @@ const widgetKey = connection.textFieldValue(1).trim();
 
 if (!/^https:\/\/[^/]+\.workers\.dev$/i.test(workerUrl) || !widgetKey) {
   await showError("Enter the full HTTPS workers.dev URL and your widget key.");
+  return;
+}
+
+// Version first: an out-of-date Worker is the one failure with a specific,
+// actionable fix, so it gets its own message rather than being buried in the
+// generic "could not be verified" wording.
+try {
+  await checkWorkerVersion(workerUrl);
+} catch (error) {
+  const outOfDate = new Alert();
+  outOfDate.title = "Update your widget service";
+  outOfDate.message = String(error).replace(/^Error:\s*/, "");
+  outOfDate.addCancelAction("OK");
+  await outOfDate.presentAlert();
   return;
 }
 

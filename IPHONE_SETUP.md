@@ -230,10 +230,41 @@ matches today's bar in every one of them.
 
 ## Install updates later
 
-Run **Monzo Installer** again. It updates the scripts without removing the
-Worker connection or widget preferences. If you previously used the older
-`Money…` script names, edit each existing Home Screen widget once and select
-its new `Monzo…` name.
+There are two halves to keep current, and they update in different ways.
+
+**The widgets on your phone.** Run **Monzo Installer** again. It refreshes the
+scripts without touching your Worker connection or preferences. If you
+previously used the older `Money…` script names, edit each Home Screen widget
+once and select its new `Monzo…` name.
+
+**Your private widget service.** This updates itself. When you deployed it,
+GitHub made your own copy of the project, and a scheduled job in that copy
+checks once a day for new code and applies it. Cloudflare notices the change
+and redeploys automatically, so normally there is nothing to do.
+
+To pull an update immediately instead of waiting for the daily check:
+
+1. Open your copy of `monzo-widgets` on [github.com](https://github.com).
+2. Tap **Actions**.
+3. Choose **Sync worker from upstream** in the left-hand list.
+4. Tap **Run workflow**, then **Run workflow** again to confirm.
+5. Wait a couple of minutes for Cloudflare to redeploy.
+
+If **Actions** shows a button offering to enable workflows, tap it once. GitHub
+turns scheduled jobs off in new copies until you approve them, and also pauses
+them again after 60 days with no activity — the same button brings them back.
+
+### Checking which version your service is on
+
+Open your `.workers.dev` address with `/version` on the end, for example
+`https://monzo-widgets.yourname.workers.dev/version`. No password is needed.
+
+- `{"service":"monzo-widgets","version":2}` — up to date
+- `{"error":"Not found"}` — out of date; run the sync above
+
+If a widget shows **"Your widget service needs updating"**, or the installer
+stops with **"Update your widget service"**, this is what they mean: the phone
+has newer widgets than the service they are calling. Sync it and try again.
 
 ## If something goes wrong
 

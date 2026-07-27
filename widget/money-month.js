@@ -98,7 +98,24 @@ async function fetchWeeks() {
   req.headers = { Authorization: `Bearer ${widgetKey}` };
   // Four weeks is four times the transactions, so allow a little longer.
   req.timeoutInterval = 25;
-  return req.loadJSON();
+  const data = await req.loadJSON();
+  // The Worker reports failures in the body with a 200-shaped response, so
+  // without this the widget would fall over later on a missing field instead.
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+/**
+ * "Not found" means this widget is newer than the Worker it is calling — the
+ * route it wants does not exist in that deployment yet. Say what to do about
+ * it rather than showing the raw error.
+ */
+function describeError(error) {
+  const text = String(error).replace(/^Error:\s*/, "");
+  if (/not found/i.test(text)) {
+    return "Your widget service needs updating.\n\nOpen your copy of monzo-widgets on github.com, then Actions → Sync worker from upstream → Run workflow. It also updates itself daily.";
+  }
+  return text;
 }
 
 function money(minorUnits) {
@@ -333,7 +350,7 @@ let widget;
 try {
   widget = buildWidget(await fetchWeeks());
 } catch (e) {
-  widget = errorWidget(String(e));
+  widget = errorWidget(describeError(e));
 }
 
 if (config.runsInWidget) {

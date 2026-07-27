@@ -61,6 +61,40 @@ can only credit something inside its own window. This is the same reason two
 Both category charts read the same settings as `Monzo Spending`, so excluding
 bills or Flex changes all of them together.
 
+## How updates reach people
+
+The two halves of this project update by different routes, and they used to
+drift apart badly.
+
+The widgets update themselves: `money-installer.js` downloads them from this
+repository every time it runs. The Worker did not, because the **Deploy to
+Cloudflare** button *copies* this repository into the user's GitHub account
+rather than forking it. There is no link back, so GitHub never offers "Sync
+fork", and a Worker stayed frozen on whatever was published the day it was set
+up — while the widgets kept moving forward and eventually called routes that
+Worker had never heard of.
+
+Two things close that gap:
+
+- **`worker/.github/workflows/sync-upstream.yml`** ships inside the template,
+  so it lands at the root of each user's copy. Once a day it pulls the current
+  `worker/` directory from this repository and commits any change, which makes
+  Cloudflare redeploy. Users can also run it on demand from the Actions tab.
+- **`GET /version`** reports the Worker's API level, unauthenticated. The
+  installer checks it before doing anything and, if the Worker is behind, says
+  so and explains how to sync — rather than failing with a 404 from a route
+  that did not exist yet. The widgets translate the same 404 into a readable
+  message.
+
+Bump `WORKER_VERSION` in `worker/src/index.ts` and `REQUIRED_WORKER_VERSION` in
+`widget/money-installer.js` together whenever the widgets start depending on
+something older Workers do not serve.
+
+The sync deliberately leaves two things alone: `wrangler.toml`, because it
+holds the Worker's name and therefore its `.workers.dev` address, and
+`.github/`, because `GITHUB_TOKEN` is not allowed to push workflow files and
+including it would make every sync fail the moment the workflow itself changed.
+
 ## What `/summary` returns
 
 All amounts are in minor units (pennies), as Monzo returns them.
