@@ -1,170 +1,184 @@
-# Set up Monzo Widgets using only an iPhone
+# Install Monzo Widgets on an iPhone
 
-No Mac, coding, or terminal is required. Allow around 15–20 minutes the first
-time and follow the steps in order.
+Follow these steps in order. You do not need a computer or any coding
+knowledge. The first setup normally takes 15–20 minutes.
 
-You will need:
+## Before you start
 
-- A Monzo account
-- The free [Scriptable app](https://apps.apple.com/app/scriptable/id1405459188)
-- Free GitHub and Cloudflare accounts
-- Safari and access to your email
+Install or create these first:
 
-Each person should deploy their own private Worker. Never share Monzo client
-secrets, widget keys, or a configured Scriptable settings file.
+1. [Scriptable from the App Store](https://apps.apple.com/app/scriptable/id1405459188)
+2. A free [GitHub account](https://github.com/signup)
+3. A free [Cloudflare account](https://dash.cloudflare.com/sign-up)
+4. Access to your Monzo app and email
 
-> **Why is GitHub needed?** Only because Cloudflare's one-tap deployment makes
-> your own copy of the code through your GitHub account. You do not need to
-> understand GitHub, upload anything, or give your friend access to this
-> repository. Scriptable does not require a GitHub account.
+GitHub is only used by Cloudflare to copy the widget code. You do not need to
+upload anything or understand how GitHub works.
 
-## The whole setup
+Keep all passwords and keys created below private.
 
-You will:
+## Step 1: Create the Monzo connection
 
-1. Make a Monzo client using a temporary callback address.
-2. Tap the Cloudflare deploy button and paste in three values.
-3. Replace the temporary address with the real address Cloudflare gives you.
-4. Connect Monzo.
-5. Run one installer in Scriptable.
+1. Open [developers.monzo.com](https://developers.monzo.com/) in Safari.
+2. Sign in with Monzo.
+3. Tap **New OAuth Client**.
+4. Enter these details:
 
-## 1. Create the Monzo client
+   - **Name:** `Monzo Widgets`
+   - **Confidentiality:** `Confidential`
+   - **Redirect URL:** `https://example.com/auth/callback`
 
-1. Open [developers.monzo.com](https://developers.monzo.com/) in Safari and
-   sign in with Monzo.
-2. Create a new OAuth client.
-3. Name it `Monzo Widgets`.
-4. Make the client **Confidential**.
-5. For **Redirect URL**, paste:
+5. Save the client.
+6. Copy the **Client ID** somewhere safe.
+7. Copy the **Client Secret** somewhere safe.
 
-   `https://example.com/auth/callback`
+The `example.com` address is temporary. Do not open it. You will replace it
+with the real address in Step 3.
 
-   This is deliberately temporary. Do not open it and do not connect Monzo
-   with it. You will replace it with your real Cloudflare address in step 3.
+## Step 2: Deploy the widget service
 
-6. Save the Client ID and Client Secret somewhere private. You will enter them
-   into Cloudflare in the next step.
-
-## 2. Deploy your private Worker
-
-Tap the button:
+Tap this button:
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/alixkyle/monzo-widgets/tree/main/worker)
 
-1. Sign in to GitHub and Cloudflare when prompted. Creating both accounts is
-   free.
-2. Allow Cloudflare to make its own copy of `monzo-widgets`.
-3. Accept the suggested repository and Worker names.
-4. Enter the three requested secret values:
+Then:
 
-   - `MONZO_CLIENT_ID`: the Client ID from Monzo
-   - `MONZO_CLIENT_SECRET`: the Client Secret from Monzo
-   - `WIDGET_KEY`: a new private password you choose (use at least 20
-     characters)
+1. Sign in to GitHub if asked.
+2. Sign in to Cloudflare if asked.
+3. Allow Cloudflare to copy `monzo-widgets`.
+4. Keep the suggested names.
+5. Cloudflare will ask for three secret values. Enter:
 
-5. Save the widget key in the Passwords app—you will need the exact same value
-   when installing the widgets.
-6. Finish the deployment. Cloudflare creates and connects the private token
-   storage automatically.
+   - **MONZO_CLIENT_ID:** the Client ID copied in Step 1
+   - **MONZO_CLIENT_SECRET:** the Client Secret copied in Step 1
+   - **WIDGET_KEY:** create a new private password containing at least 20
+     characters
 
-## 3. Connect Monzo
+6. Save the `WIDGET_KEY` in the Passwords app. You must use exactly the same
+   password again later.
+7. Finish the deployment and wait for Cloudflare to show that it succeeded.
+8. Open the new address ending in `.workers.dev`.
 
-1. Open the new `workers.dev` URL shown by Cloudflare.
-2. On the page headed **Monzo Widgets**, copy the full **Monzo Redirect URL**.
-   It will look similar to:
+You should now see a page headed **Monzo Widgets**.
 
-   `https://monzo-widgets.example.workers.dev/auth/callback`
+## Step 3: Add the real Monzo redirect address
 
-3. Return to your client at [developers.monzo.com](https://developers.monzo.com/)
-   and replace `https://example.com/auth/callback` with the copied address.
-4. Save the Monzo client and check the address ends in `/auth/callback`.
-5. Return to the **Monzo Widgets** Worker page.
-6. Enter the widget key you saved and tap **Connect Monzo**.
-7. Follow the magic link Monzo emails you.
-8. Open the Monzo app and approve the access request.
+This step replaces the temporary `example.com` address.
 
-The connection page should now confirm that the account is connected.
+1. On the **Monzo Widgets** page, copy the address under
+   **MONZO REDIRECT URL**.
+2. Check that the copied address ends in `/auth/callback`.
+3. Return to [developers.monzo.com](https://developers.monzo.com/).
+4. Open the `Monzo Widgets` client created in Step 1.
+5. Delete `https://example.com/auth/callback`.
+6. Paste the new Cloudflare address in its place.
+7. Save the Monzo client.
 
-> Do not continue if the temporary `example.com` address is still in Monzo.
-> Replace it first; otherwise Monzo cannot return you to your private Worker.
+Do not continue until `example.com` has been replaced.
 
-## 4. Install every widget
+## Step 4: Connect your Monzo account
 
-1. Install and open
-   [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) once so its
-   iCloud Drive folder is created.
+1. Return to the Cloudflare address ending in `.workers.dev`.
+2. Enter the `WIDGET_KEY` saved in Step 2.
+3. Tap **Connect Monzo**.
+4. Open the sign-in link Monzo sends by email.
+5. Open the Monzo app when asked.
+6. Approve the access request.
+
+The browser should confirm that Monzo is connected.
+
+## Step 5: Install the Scriptable widgets
+
+1. Open Scriptable once, then return to Safari. This creates its iCloud folder.
 2. Open the
-   [Money Installer file](https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js)
-   in Safari.
-3. Use Safari's Share button and choose **Save to Files**.
-4. Save it in **iCloud Drive → Scriptable** as `Money Installer.js`.
-5. Open Scriptable. Tap **Money Installer**, then tap the triangular Run button.
-6. Enter the Worker URL without `/auth/callback` on the end. For example:
+   [Money Installer file](https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget/money-installer.js).
+3. Tap Safari's **Share** button.
+4. Tap **Save to Files**.
+5. Choose **iCloud Drive → Scriptable**.
+6. Save the file as `Money Installer.js`.
+7. Open Scriptable.
+8. Open **Money Installer** and tap the triangular Run button.
+9. When asked for the **Worker URL**, enter the Cloudflare address ending in
+   `.workers.dev`. Do not add `/auth/callback`.
+10. When asked for the **Widget key**, enter the same `WIDGET_KEY` saved in
+    Step 2.
+11. Tap **Verify and install**.
 
-   `https://monzo-widgets.example.workers.dev`
+The installer will add:
 
-7. Enter the same widget key you saved earlier. The installer verifies the connection,
-   downloads every widget, and writes their shared settings.
-8. Run **Money Settings** to review the defaults.
+- `Money App`
+- `Money Week`
+- `Money — bills & savings`
+- `Money — pots`
+- `Money Settings`
 
-## 5. Add the Home Screen widgets
+Run **Money Settings** if you want to review the recommended defaults.
 
-Long-press the Home Screen, tap **+**, choose Scriptable, and add:
+## Step 6: Put the widgets on the Home Screen
 
-| Widget | Recommended size |
+Add each widget separately:
+
+1. Long-press an empty area of the Home Screen.
+2. Tap **Edit**, then **Add Widget**.
+3. Search for **Scriptable**.
+4. Choose a size and tap **Add Widget**.
+5. Long-press the new widget.
+6. Tap **Edit Widget**.
+7. Tap **Script**, then select the matching Money script.
+
+Recommended sizes:
+
+| Script | Size |
 | --- | --- |
 | `Money App` | Small or medium |
 | `Money Week` | Medium |
 | `Money — bills & savings` | Medium |
 | `Money — pots` | Small |
 
-Long-press each new widget, choose **Edit Widget**, then select the matching
-script.
+Setup is complete.
 
-## Settings
+## Change the settings later
 
-Run `Money Settings` whenever you want to change:
+Open Scriptable and run **Money Settings**. The options are grouped into:
 
-- Whether Bills and Savings are excluded from Money Week
-- Whether Flex appears in weekly charts
-- Midnight or Monzo's 04:00 day boundary
-- Whether Flex debt is subtracted from Total Balance
-- Whether zero-balance pots are hidden
-- Whether Current Account and Flex rows are shown
-- Whether linked bill-split repayments reduce the original purchase
-- Whether unrelated incoming payments are ignored or reduce spending
-- Whether card refunds apply to the purchase date, refund date, or are ignored
-- Whether outgoing transfers are included, excluded, or limited to spending
-  categories
+- **Money App & Money Week**
+- **Balances & Pots**
+- **Advanced transaction handling**
 
-The settings screen groups these into **Money App & Money Week**,
-**Balances & Pots**, and **Advanced transaction handling** so the first screen
-stays short. Settings are stored in Scriptable's iCloud folder and apply to
-every widget.
-Money App and Money Week use the same calculation rules, so today's headline
-matches today's bar in the weekly chart.
+Money App and Money Week use the same spending rules, so today's headline
+matches today's bar.
 
-## Updating later
+## Install updates later
 
-Run `Money Installer` again. It replaces the widget code with the latest
-version while preserving your connection and preferences.
+Run **Money Installer** again. It updates the scripts without removing the
+Worker connection or widget preferences.
 
-## Troubleshooting
+## If something goes wrong
 
-**Cloudflare asks for permission to create KV storage** — allow it. This is the
-private storage used for rotating Monzo tokens.
+**Monzo says the redirect URL is wrong**
 
-**Monzo says the redirect URL is wrong** — copy it again from the Worker home
-page. It must end in `/auth/callback` and match exactly.
+Copy the Monzo Redirect URL from the Cloudflare page again. It must end in
+`/auth/callback` and must exactly match the address saved at
+[developers.monzo.com](https://developers.monzo.com/).
 
-**Do I keep the example.com redirect?** — no. It only lets you create the Monzo
-client before Cloudflare has generated your real address. Replace it during
-step 3, before tapping Connect Monzo.
+**The Worker says Unauthorised**
 
-**The Worker says Unauthorised** — the widget key entered on the Worker page or
-in Money Installer does not exactly match the `WIDGET_KEY` Cloudflare secret.
+The `WIDGET_KEY` entered on the Cloudflare page does not exactly match the one
+created in Step 2.
 
-**Monzo returns 403** — open Monzo and approve the developer access request.
+**Monzo returns 403**
 
-**Widgets look stale** — iOS controls widget refresh timing. Run the widget
-inside Scriptable to force an immediate check.
+Open the Monzo app and approve the developer access request.
+
+**Money Installer cannot verify the connection**
+
+Check that:
+
+- Monzo was connected successfully in Step 4.
+- The Worker URL ends in `.workers.dev` with nothing after it.
+- The widget key is exactly the same as the `WIDGET_KEY` entered in Cloudflare.
+
+**A widget looks out of date**
+
+iOS chooses when Home Screen widgets refresh. Open its script in Scriptable
+and run it to request fresh data immediately.
