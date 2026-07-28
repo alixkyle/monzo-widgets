@@ -121,9 +121,15 @@ function buildWidget(data) {
 
   w.addSpacer(4);
 
+  // A small widget only has about 110pt of width, which four figures and pence
+  // overflow at 36pt — iOS then truncates it to "£14…" rather than shrinking
+  // it, so start smaller there and let it scale down further if it has to.
+  const small = config.widgetFamily === "small";
   const total = w.addText(money(data.spentToday, data.currency));
-  total.font = Font.heavySystemFont(36);
+  total.font = Font.heavySystemFont(small ? 30 : 36);
   total.textColor = COLORS.text;
+  total.lineLimit = 1;
+  total.minimumScaleFactor = 0.5;
 
   w.addSpacer(2);
 
@@ -149,7 +155,7 @@ function buildWidget(data) {
   }
 
   // Small widgets have no room for a transaction list.
-  const rows = config.widgetFamily === "small" ? 0 : 3;
+  const rows = small ? 0 : 3;
   if (rows > 0 && data.transactions.length > 0) {
     w.addSpacer(10);
     for (const tx of data.transactions.slice(0, rows)) {

@@ -134,7 +134,7 @@ function shortMoney(minorUnits) {
 function categoryName(category) {
   const words = category.replace(/_/g, " ").trim();
   const titled = words.charAt(0).toUpperCase() + words.slice(1);
-  return titled.length > 13 ? `${titled.slice(0, 12)}…` : titled;
+  return titled.length > 11 ? `${titled.slice(0, 10)}…` : titled;
 }
 
 /**
@@ -192,8 +192,8 @@ function drawChart(weeks, series, width, height) {
   ctx.opaque = false;
   ctx.respectScreenScale = true;
 
-  // Tighter bands than the single-legend charts: the second legend row has to
-  // come from somewhere, and the bars are the only place with slack.
+  // Tighter bands than the daily charts: with the totals column alongside,
+  // the bars are the only place left with slack.
   const labelBand = 14;
   const valueBand = 12;
   const plotHeight = height - labelBand - valueBand;
@@ -253,29 +253,45 @@ function drawChart(weeks, series, width, height) {
   return ctx.getImage();
 }
 
-function legendDot(stack, color, label) {
-  const dot = stack.addText("●");
-  dot.font = Font.systemFont(9);
-  dot.textColor = color;
-  stack.addSpacer(3);
-  const text = stack.addText(label);
-  text.font = Font.systemFont(9);
-  text.textColor = COLORS.dim;
-  text.lineLimit = 1;
-}
+/**
+ * The legend, as a column beside the chart: a dot, the category, and what it
+ * came to over the whole period. Doubling as the legend is what pays for the
+ * width it takes from the bars.
+ */
+function addTotalsColumn(stack, series, categoryTotals, width) {
+  const column = stack.addStack();
+  column.layoutVertically();
+  column.size = new Size(width, 0);
 
-/** Six categories will not fit on one line, so the legend wraps. */
-function addLegend(widget, series, perRow) {
-  for (let i = 0; i < series.length; i += perRow) {
-    const row = widget.addStack();
+  const amounts = segmentValues(categoryTotals, series);
+
+  series.forEach((entry, index) => {
+    if (index > 0) column.addSpacer(3);
+    const row = column.addStack();
     row.layoutHorizontally();
-    series.slice(i, i + perRow).forEach((entry, index) => {
-      if (index > 0) row.addSpacer(8);
-      legendDot(row, entry.color, entry.label);
-    });
+    row.centerAlignContent();
+
+    const dot = row.addText("●");
+    dot.font = Font.systemFont(9);
+    dot.textColor = entry.color;
+
+    row.addSpacer(4);
+
+    const label = row.addText(entry.label);
+    label.font = Font.systemFont(10);
+    label.textColor = COLORS.dim;
+    label.lineLimit = 1;
+    label.minimumScaleFactor = 0.8;
+
     row.addSpacer();
-    if (i + perRow < series.length) widget.addSpacer(2);
-  }
+
+    const amount = row.addText(shortMoney(amounts[index]));
+    amount.font = Font.semiboldSystemFont(10);
+    amount.textColor = COLORS.text;
+    amount.lineLimit = 1;
+  });
+
+  column.addSpacer();
 }
 
 function buildWidget(data) {
@@ -310,25 +326,31 @@ function buildWidget(data) {
 
   const series = rankCategories(data.categoryTotals);
 
-  // A medium widget only has room for about 125pt of content, and the wrapped
-  // legend claims two rows of it, so the chart is shorter than the
-  // single-legend ones. Overflowing here silently clips the legend.
-  const large = config.widgetFamily === "large";
-  const width = 300;
-  const height = large ? 200 : 62;
-  w.addImage(drawChart(data.weeks, series, width, height)).imageSize = new Size(
-    width,
-    height
-  );
-
-  w.addSpacer(5);
   if (series.length === 0) {
     const empty = w.addText("Nothing spent in the last four weeks");
     empty.font = Font.systemFont(9);
     empty.textColor = COLORS.dim;
-  } else {
-    addLegend(w, series, 3);
+    return w;
   }
+
+  // The totals column takes a third of the width from the bars, but with only
+  // four of them they can afford it. Six rows at 10pt come to about 95pt, so
+  // the chart is sized to match rather than to the widget's full height.
+  const large = config.widgetFamily === "large";
+  const totalsWidth = 112;
+  const chartWidth = 300 - totalsWidth - 10;
+  const chartHeight = large ? 200 : 95;
+
+  const body = w.addStack();
+  body.layoutHorizontally();
+  body.topAlignContent();
+
+  body.addImage(
+    drawChart(data.weeks, series, chartWidth, chartHeight)
+  ).imageSize = new Size(chartWidth, chartHeight);
+
+  body.addSpacer(10);
+  addTotalsColumn(body, series, data.categoryTotals, totalsWidth);
 
   return w;
 }

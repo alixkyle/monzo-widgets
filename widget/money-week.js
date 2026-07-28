@@ -9,17 +9,19 @@ const WIDGET_KEY = "PASTE_YOUR_WIDGET_KEY";
 
 // ---------------------------------------------------------------------------
 
-// Monzo's brand palette: hot coral on deep navy, with green and orange from
-// their secondary set for the other categories. Their hero typeface
-// (Oldschool Grotesk) isn't available to Scriptable, so heavy system weights
-// stand in for it.
+// Monzo's brand palette: hot coral on deep navy, with blue and green from
+// their secondary set for the other methods. Coral is reserved for Flex, the
+// one that costs you money, so card spending takes the blue. Their hero
+// typeface (Oldschool Grotesk) isn't available to Scriptable, so heavy system
+// weights stand in for it.
 const COLORS = {
   bg: new Color("#001E3A"),
   text: new Color("#F7F5F2"),
   dim: new Color("#8FA3B8"),
-  card: new Color("#FF4F40"),
+  accent: new Color("#FF4F40"),
+  card: new Color("#59A5E0"),
   transfers: new Color("#4BB78F"),
-  flex: new Color("#F1BD76"),
+  flex: new Color("#FF4F40"),
   grid: new Color("#245F8C"),
 };
 
@@ -189,7 +191,7 @@ function buildWidget(data) {
   accent.size = new Size(28, 3);
   accent.opaque = false;
   accent.respectScreenScale = true;
-  accent.setFillColor(COLORS.card);
+  accent.setFillColor(COLORS.accent);
   accent.fillRect(new Rect(0, 0, 28, 3));
   w.addImage(accent.getImage()).imageSize = new Size(28, 3);
   w.addSpacer(7);
@@ -238,7 +240,7 @@ function errorWidget(message) {
   w.backgroundColor = COLORS.bg;
   const t = w.addText("Monzo Spending");
   t.font = Font.heavySystemFont(14);
-  t.textColor = COLORS.card;
+  t.textColor = COLORS.accent;
   w.addSpacer(4);
   const m = w.addText(message);
   m.font = Font.systemFont(10);
