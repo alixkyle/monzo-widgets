@@ -66,8 +66,12 @@ bills or Flex changes all of them together.
 The two halves of this project update by different routes, and they used to
 drift apart badly.
 
-The widgets update themselves: `money-installer.js` downloads them from this
-repository every time it runs. The Worker did not, because the **Deploy to
+The widgets update themselves. `money-installer.js` downloads them from this
+repository every time it runs, and `money-widget.js` — Monzo Today, the one
+that tends to be on a home screen — repeats that same download loop once a day
+for the whole set, after it has finished rendering. A change pushed here
+therefore reaches a phone without anyone being asked to press anything, and the
+installer remains the fallback that always works. The Worker did not, because the **Deploy to
 Cloudflare** button *copies* this repository into the user's GitHub account
 rather than forking it. There is no link back, so GitHub never offers "Sync
 fork", and a Worker stayed frozen on whatever was published the day it was set

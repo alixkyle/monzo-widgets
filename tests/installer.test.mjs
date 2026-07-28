@@ -325,3 +325,27 @@ test("a Worker newer than the widgets is still accepted", async () => {
   const { writes } = await runInstaller({ workerVersion: 99 });
   assert.ok(writes.has("/icloud/Monzo 4 Weeks.js"));
 });
+
+/**
+ * Monzo Today refreshes the whole set once a day, so it carries its own copy
+ * of the installer's file table. A widget added to one list and not the other
+ * would install fine and then silently never update again.
+ */
+test("the widgets' auto-update list matches the installer's", () => {
+  const widgetSource = fs.readFileSync(
+    path.join(root, "widget", "money-widget.js"),
+    "utf8"
+  );
+  const fileTable = (source, name) => {
+    const match = source.match(new RegExp(`const ${name} = (\\[[\\s\\S]*?\\]);`));
+    assert.ok(match, `${name} was not found`);
+    // Serialized rather than returned as-is: each context brings its own Array
+    // prototype, which a deep comparison counts as a difference.
+    return JSON.stringify(vm.runInNewContext(match[1]));
+  };
+
+  assert.equal(
+    fileTable(widgetSource, "UPDATE_FILES"),
+    fileTable(installerSource, "FILES")
+  );
+});

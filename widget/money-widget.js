@@ -3,6 +3,9 @@
 // Setup: copy this file into Scriptable on your iPhone, fill in the two values
 // below, then add a Scriptable widget to your home screen and pick this script.
 // See SETUP.md for the full walkthrough.
+//
+// This one also keeps the whole set of widgets up to date — see
+// refreshWidgetScripts below.
 
 const WORKER_URL = "https://monzo-widgets.YOUR-SUBDOMAIN.workers.dev";
 const WIDGET_KEY = "PASTE_YOUR_WIDGET_KEY";
@@ -20,6 +23,79 @@ const COLORS = {
   green: new Color("#4BB78F"),
   rule: new Color("#245F8C"),
 };
+
+// Keeping every widget up to date is one download loop, so the widget that is
+// always on a home screen carries it for the whole set. The installer stays the
+// manual fallback; this is what saves you having to ask someone else to run it.
+//
+// It runs after the widget has been handed to iOS, never before, so a slow or
+// failed download costs nothing on screen.
+const UPDATE_SOURCE =
+  "https://raw.githubusercontent.com/alixkyle/monzo-widgets/main/widget";
+
+// Mirrors FILES in money-installer.js: repository name, then the script name
+// Scriptable shows. Add new widgets to both.
+const UPDATE_FILES = [
+  ["money-widget.js", "Monzo Today.js"],
+  ["money-week.js", "Monzo Spending.js"],
+  ["money-week-categories.js", "Monzo Categories.js"],
+  ["money-month.js", "Monzo 4 Weeks.js"],
+  ["money-bills-savings.js", "Monzo Bills & Savings.js"],
+  ["money-pots.js", "Monzo Balances & Pots.js"],
+  ["money-settings.js", "Monzo Settings.js"],
+];
+
+const UPDATE_EVERY_MS = 24 * 60 * 60 * 1000;
+const UPDATE_MARKER = "money-update-check.txt";
+
+// Scriptable owns these three lines and rewrites them on save, so they have to
+// survive an update or a script loses its icon.
+const SCRIPTABLE_HEADER =
+  /^\/\/ Variables used by Scriptable\.\n\/\/ These must be at the very top of the file\. Do not edit\.\n\/\/ icon-[^\n]*\n/;
+
+/**
+ * Downloads the current widgets over the installed ones, once a day.
+ *
+ * The copy running right now has already been loaded, so rewriting it here
+ * takes effect on the next refresh rather than this one — which is why this is
+ * worth doing at all: nobody has to be told to press anything.
+ */
+async function refreshWidgetScripts() {
+  const fm = FileManager.iCloud();
+  const directory = fm.documentsDirectory();
+  const marker = fm.joinPath(directory, UPDATE_MARKER);
+
+  if (fm.fileExists(marker)) {
+    await fm.downloadFileFromiCloud(marker);
+    const last = Number(fm.readString(marker));
+    if (Number.isFinite(last) && Date.now() - last < UPDATE_EVERY_MS) return;
+  }
+
+  // Written before the downloads, not after: a source that always fails would
+  // otherwise be retried on every single widget refresh, all day.
+  fm.writeString(marker, String(Date.now()));
+
+  for (const [source, destination] of UPDATE_FILES) {
+    const request = new Request(`${UPDATE_SOURCE}/${source}`);
+    request.timeoutInterval = 20;
+    const code = await request.loadString();
+
+    // The installer's guard: never overwrite a working widget with a truncated
+    // or unexpected download.
+    if (!code || !code.includes("Monzo")) continue;
+
+    const path = fm.joinPath(directory, destination);
+    let header = "";
+    if (fm.fileExists(path)) {
+      await fm.downloadFileFromiCloud(path);
+      const current = fm.readString(path);
+      const match = current.match(SCRIPTABLE_HEADER);
+      header = match ? match[0] : "";
+      if (current.slice(header.length) === code) continue;
+    }
+    fm.writeString(path, header + code);
+  }
+}
 
 async function loadWidgetSettings() {
   const defaults = {
@@ -217,5 +293,11 @@ if (config.runsInWidget) {
 } else {
   await widget.presentMedium();
 }
+
+// Last, and never allowed to fail loudly: the widget is already on screen, and
+// a missed update just means trying again tomorrow.
+try {
+  await refreshWidgetScripts();
+} catch {}
 
 Script.complete();

@@ -253,11 +253,17 @@ matches today's bar in every one of them.
 
 There are two halves to keep current, and they update in different ways.
 
-**The widgets on your phone.** Run **Monzo Installer** again. It refreshes the
-scripts without touching your Worker connection or preferences, and fills in
-your Worker address and widget password from last time, so there is nothing to
-retype. If you previously used the older `Money…` script names, edit each Home
-Screen widget once and select its new `Monzo…` name.
+**The widgets on your phone.** Normally nothing to do. As long as **Monzo
+Today** is on a Home Screen, it quietly refreshes all of the widget scripts
+once a day, so improvements arrive on their own within about a day of being
+published.
+
+To pull one immediately — or if Monzo Today is not on a Home Screen — run
+**Monzo Installer** again. It refreshes the scripts without touching your
+Worker connection or preferences, and fills in your Worker address and widget
+password from last time, so there is nothing to retype. If you previously used
+the older `Money…` script names, edit each Home Screen widget once and select
+its new `Monzo…` name.
 
 If it says **Installer updated**, it has replaced itself with a newer version
 that knows about widgets added since you saved it. Tap **OK** and run it once
